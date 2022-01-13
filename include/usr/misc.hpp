@@ -2,11 +2,11 @@
 #define _MISC_HPP_
 
 
-#define LEFTFRONT 17
-#define LEFTREAR 16
+#define LEFTFRONT 2
+#define LEFTREAR 11
 
-#define RIGHTFRONT 15
-#define RIGHTREAR 14
+#define RIGHTFRONT 9
+#define RIGHTREAR 17
 
 extern pros::Controller master;
 
