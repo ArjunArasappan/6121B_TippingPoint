@@ -23,8 +23,10 @@ void on_center_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	pros::Task chassis_task(chassisTask);
 	pros::lcd::initialize();
+	pros::Task chassis_task(chassisTask);
+	pros::Task lift_task(liftTask);
+	pros::Task fork_task(forkTask);
 
 }
 
@@ -74,13 +76,28 @@ void autonomous() {}
  */
 void opcontrol() {
 	while (true) {
-		if(master.get_digital(DIGITAL_X)){
+		if(master.get_digital(DIGITAL_UP)){
 			setChassisMode(1);
 			moveForwardAsync(12);
 			chassisWaitUntilSettled();
+			setChassisMode(0);
+		}
+		else if(master.get_digital(DIGITAL_DOWN)){
+			setChassisMode(1);
+			moveBackAsync(12);
+			chassisWaitUntilSettled();
+			setChassisMode(0);
+		}
+		else if (master.get_digital(DIGITAL_RIGHT)) {
+			setChassisMode(1);
+			turnAsync(360);
+			chassisWaitUntilSettled();
+			setChassisMode(0);
 		}
 		else{
 			setChassisMode(0);
+			setLiftMode(0);
+			setForkMode(0);
 		}
 
 
