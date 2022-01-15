@@ -23,10 +23,14 @@ void on_center_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	pros::lcd::initialize();
+	//autonomousChooserInit();
+
+
 	pros::Task chassis_task(chassisTask);
 	pros::Task lift_task(liftTask);
 	pros::Task fork_task(forkTask);
+	clampPiston(true);
+	pros::lcd::initialize();
 
 }
 
@@ -46,7 +50,13 @@ void disabled() {}
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() {}
+void competition_initialize() {
+	while (true){
+		_leftReset();
+		_rightReset();
+		pros::delay(20);
+	}
+}
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -59,7 +69,15 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+		//autonomousChooserExecuteAuto();
+		//leftBoth();
+		rightBoth();
+
+
+		pros::delay(5000);
+
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -75,30 +93,34 @@ void autonomous() {}
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+	pros::lcd::initialize();
 	while (true) {
-		if(master.get_digital(DIGITAL_UP)){
-			setChassisMode(1);
-			moveForwardAsync(12);
-			chassisWaitUntilSettled();
-			setChassisMode(0);
-		}
-		else if(master.get_digital(DIGITAL_DOWN)){
-			setChassisMode(1);
-			moveBackAsync(12);
-			chassisWaitUntilSettled();
-			setChassisMode(0);
-		}
-		else if (master.get_digital(DIGITAL_RIGHT)) {
-			setChassisMode(1);
-			turnAsync(360);
-			chassisWaitUntilSettled();
-			setChassisMode(0);
-		}
-		else{
+		// if(master.get_digital(DIGITAL_UP)){
+		// 	setChassisMode(1);
+		// 	moveForwardAsync(12);
+		// 	chassisWaitUntilSettled();
+		// 	setChassisMode(0);
+		// }
+		// else if(master.get_digital(DIGITAL_DOWN)){
+		// 	setChassisMode(1);
+		// 	moveBack(10);
+		// 	setChassisMode(0);
+		// }
+		// else if (master.get_digital(DIGITAL_RIGHT)) {
+		// 	setChassisMode(2);
+		// 	turnAsync(360);
+		// 	chassisWaitUntilSettled();
+		// 	setChassisMode(0);
+		// }
+		// else{
+		// 	setChassisMode(0);
+		// 	setLiftMode(0);
+		// 	setForkMode(0);
+		// }
+
 			setChassisMode(0);
 			setLiftMode(0);
 			setForkMode(0);
-		}
 
 
 		pros::delay(20);

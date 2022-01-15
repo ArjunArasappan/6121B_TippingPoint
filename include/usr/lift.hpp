@@ -8,6 +8,8 @@ void setLiftTarget(double target);
 
 void liftPrintInfo();
 
+void clampPiston(bool val);
+
 void setLiftMode(int mode);
 
 void calcDelta();

@@ -8,8 +8,9 @@ pros::Motor right2(RIGHTREAR, MOTOR_GEARSET_18, true, MOTOR_ENCODER_DEGREES);
 
 static int chassisMode = 1; //1 for forward/backward; 2 for turn; 3 for point turn; 4 for arcs
 
-const double WHEELBASE_WIDTH = 20;
-const double WHEEL_DIAM = 3.25;
+const double WHEELBASE_WIDTH = 13.25;
+const int WHEEL_DIAM = 4;
+const double DRIVE_RATIO = 84/60;
 const double PI = 3.14159265;
 
 int CHASSIS_MAX = 127;
@@ -29,16 +30,16 @@ double D = 0;
 
 
 
-const double CHASSIS_KP = 0.4;
-const double CHASSIS_KI = 0;
+const double CHASSIS_KP = 0.40;
+const double CHASSIS_KI = 0.01;
 const double CHASSIS_KD = 1.25;
 
-const double CHASSIS_ERROR_TRESH[] = {10, 5}; //1st bound starts timer, 2nd bound is for exit condition
-const double CHASSIS_DERIV_THRESH = 1.5; //derivative threshold
-const int CHASSIS_TIMEOUT[] = {600, 200}; //max settling time
+const double CHASSIS_ERROR_TRESH[] = {30, 7}; //1st bound starts timer, 2nd bound is for exit condition
+const double CHASSIS_DERIV_THRESH = 3; //derivative threshold
+const int CHASSIS_TIMEOUT[] = {1000, 200}; //max settling time
 
-const double CHASSIS_LOWER_INTEGRAL_BOUND = 0;
-const double CHASSIS_UPPER_INTEGRAL_BOUND = 0;
+const double CHASSIS_LOWER_INTEGRAL_BOUND = CHASSIS_ERROR_TRESH[1] + 3;
+const double CHASSIS_UPPER_INTEGRAL_BOUND = 60;
 const double CHASSIS_INTEGRAL_CAP = 0;
 
 
@@ -101,9 +102,9 @@ double turnPower = 0;
 
 double turnIntegral = 0;
 
-const double TURN_KP = 0;
+const double TURN_KP = 0.9;
 const double TURN_KI = 0;
-const double TURN_KD = 0;
+const double TURN_KD = 3;
 
 const double TURN_ERROR_MIN = 0;
 
@@ -111,9 +112,9 @@ const double TURN_LOWER_INTEGRAL_BOUND = 0;
 const double TURN_UPPER_INTEGRAL_BOUND = 0;
 const double TURN_INTEGRAL_CAP = 0;
 
-const int TURN_ERROR_TRESH[] = {40, 10};
-const double TURN_DERIV_THRESH = 0;
-const double TURN_TIMEOUT = 500;
+const int TURN_ERROR_TRESH[] = {15, 7};
+const double TURN_DERIV_THRESH = 2;
+const double TURN_TIMEOUT = 1000;
 
 int turnAccelStep = 0;
 
@@ -142,8 +143,10 @@ double slantDeriv = 0;
 const double SLANT_KP = 0;
 const double SLANT_KD = 0;
 
-const double SLANT_TURN_KP = 3.5;
-const double SLANT_TURN_KD = 1;
+const double SLANT_TURN_KP = 0;
+const double SLANT_TURN_KD = 0;
+
+const double SLANT_THRESH = 15;
 
 double slantState = 0;
 
@@ -185,14 +188,14 @@ double sgn(double value){
 double inchesToTicks(double inches)
 {
 	double revolutions = inches / (WHEEL_DIAM * PI);
-	return revolutions * 360;
+	return revolutions * 360 / DRIVE_RATIO;
 }
 
 double degreesToTicks(double degrees)
 {
 	double distance_inches = ( PI * WHEELBASE_WIDTH * degrees) / 360.0;
-	double revolutions = distance_inches / ( WHEEL_DIAM * PI);
-	return revolutions * 360;
+	double revolutions = (distance_inches / (WHEEL_DIAM * PI));
+	return revolutions * 360 * 60 / 84;
 }
 
 /**************************************************/
@@ -296,7 +299,7 @@ void _rightReset()
 
 /**************************************************/
 //slew control
-int accel_step = 8; //default acceleration
+int accel_step = 4; //default acceleration
 int decel_step = 256; // no decel slew
 int accel;
 int decel;
@@ -465,27 +468,30 @@ void turnWaitUntilSettled(){
 }
 
 void chassisWaitUntilSettled(){
-    while(true) {pros::delay(20);}
-    switch (chassisMode) {
-        case 1:
-        leftWaitUntilSettled();
-        rightWaitUntilSettled();
-        break;
+    while(true) {
+        pros::delay(20);
+        switch (chassisMode) {
+            case 1:
+            leftWaitUntilSettled();
+            rightWaitUntilSettled();
+            break;
 
-        case 2:
-        turnWaitUntilSettled();
-        break;
+            case 2:
+            turnWaitUntilSettled();
+            break;
 
-        case 3:
-        leftWaitUntilSettled();
-        rightWaitUntilSettled();
-        break;
+            case 3:
+            leftWaitUntilSettled();
+            rightWaitUntilSettled();
+            break;
 
-        case 4:
-        leftWaitUntilSettled();
-        rightWaitUntilSettled();
-        break;
+            case 4:
+            leftWaitUntilSettled();
+            rightWaitUntilSettled();
+            break;
     }
+    break;
+}
 
 }
 
@@ -529,11 +535,16 @@ void moveBackAsync(double sp){
 }
 
 void moveBack(double sp){
+    chassisMode = 1;
+    _leftReset();
+    _rightReset();
     moveForward(-sp);
 }
 
 void turnAsync(double degrees){
     reset();
+    _leftReset();
+    _rightReset();
     chassisMode = 2;
 	turnTarget = degreesToTicks(degrees);
 }
@@ -653,9 +664,19 @@ void printStats(){
 
     }
 
-    pros::lcd::print(1, "isLeftSettled: %d\n",  toInt(isLeftSettled()));
-    pros::lcd::print(2, "isRightSettled: %d\n", toInt(isRightSettled()));
+    pros::lcd::print(0, "turnError: %d\n",  (int)turnError);
+    pros::lcd::print(1, "turnPos: %d\n",  (int)turnPos);
+    pros::lcd::print(2, "rightError: %d\n", (int)rightError);
+    pros::lcd::print(3, "leftError: %d\n", (int)leftError);
+    pros::lcd::print(4, "isRightSettled: %d\n", toInt(isRightSettled()));
+    pros::lcd::print(5, "isLeftSettled: %d\n", toInt(isLeftSettled()));
+
+    pros::lcd::print(6, "slantDiff: %d\n", (int)slantDiff);
+    pros::lcd::print(7, "leftError: %d\n", (int)leftError);
+    //pros::lcd::print(6, "turnError: %d\n", (int)turnError);
+
 }
+
 
 /**************************************************/
 
@@ -672,7 +693,7 @@ void chassisTask(void* parameter){
         // }
         if(chassisMode == 0){
             chassisArcade();
-            printStats();
+            //printStats();
         }
 
         //autonomous control
@@ -697,16 +718,16 @@ void chassisTask(void* parameter){
 
 
                 //checks if error is within integrating bounds
-                if (abs(leftError) < CHASSIS_UPPER_INTEGRAL_BOUND || abs(leftError) > CHASSIS_LOWER_INTEGRAL_BOUND)
+                if (abs(leftError) < CHASSIS_UPPER_INTEGRAL_BOUND && abs(leftError) > CHASSIS_LOWER_INTEGRAL_BOUND)
                     leftIntegral += leftError;
                 else
                     leftIntegral = 0;
 
-                //caps integral
-                if (leftIntegral > CHASSIS_INTEGRAL_CAP)
-                    leftIntegral = CHASSIS_INTEGRAL_CAP;
-                else if (leftIntegral < -CHASSIS_INTEGRAL_CAP)
-                    leftIntegral = -CHASSIS_INTEGRAL_CAP;
+                // //caps integral
+                // if (leftIntegral > CHASSIS_INTEGRAL_CAP)
+                //     leftIntegral = CHASSIS_INTEGRAL_CAP;
+                // else if (leftIntegral < -CHASSIS_INTEGRAL_CAP)
+                //     leftIntegral = -CHASSIS_INTEGRAL_CAP;
 
                 //calcs power
                 leftPower = leftError * P + leftIntegral * I + leftDeriv * D;
@@ -728,16 +749,16 @@ void chassisTask(void* parameter){
 
 
                 //checks if error is within integrating bounds
-                if (abs(rightError) < CHASSIS_UPPER_INTEGRAL_BOUND || abs(rightError) > CHASSIS_LOWER_INTEGRAL_BOUND)
+                if (abs(rightError) < CHASSIS_UPPER_INTEGRAL_BOUND && abs(rightError) > CHASSIS_LOWER_INTEGRAL_BOUND)
                     rightIntegral += rightError;
                 else
                     rightIntegral = 0;
 
-                //caps integral
-                if (rightIntegral > CHASSIS_INTEGRAL_CAP)
-                    rightIntegral = CHASSIS_INTEGRAL_CAP;
-                else if (rightIntegral < -CHASSIS_INTEGRAL_CAP)
-                    rightIntegral = -CHASSIS_INTEGRAL_CAP;
+                // //caps integral
+                // if (rightIntegral > CHASSIS_INTEGRAL_CAP)
+                //     rightIntegral = CHASSIS_INTEGRAL_CAP;
+                // else if (rightIntegral < -CHASSIS_INTEGRAL_CAP)
+                //     rightIntegral = -CHASSIS_INTEGRAL_CAP;
 
                 //calcs power
                 rightPower = rightError * P + rightIntegral * I + rightDeriv* D;
@@ -758,14 +779,11 @@ void chassisTask(void* parameter){
 
                 slantGains = slantDiff * SLANT_KP + slantDeriv * SLANT_KD;
 
-                if ((leftError + rightError) / 2 > 0){
-                    leftPower -= slantGains;
-                    rightPower += slantGains;
-                }
-                else{
+                if (leftPos > SLANT_THRESH * direc && rightPos > SLANT_THRESH * direc){
                     leftPower += slantGains;
                     rightPower -= slantGains;
                 }
+
 
                 //OUTPUT
 
@@ -784,7 +802,7 @@ void chassisTask(void* parameter){
 
                 std::cout << leftTarget << ", " << rightTarget << ", " << leftError << ", " << rightError << ", " << leftPos << ", " << rightPos << ", " << leftPower << ", " << rightPower << ", " << slewedLeftPower << ", " << slewedRightPower << ", " << lastSlewedLeftPower << ", " << lastSlewedRightPower << '\n';
 
-                //printStats();
+                printStats();
             }
 
             //turn
@@ -798,7 +816,7 @@ void chassisTask(void* parameter){
                 TURN CALCULATIONS
                 */
 
-                turnPos = (getLeftPos() - getRightPos()) / 2.0;
+                turnPos = (-getLeftPos() + getRightPos()) / 2.0;
                 turnError = turnTarget - turnPos;
                 turnDeriv = turnError - lastTurnError;
                 lastTurnError = turnError;
@@ -826,8 +844,8 @@ void chassisTask(void* parameter){
                 else if (turnPower < -127)
                     turnPower = -127;
 
-                leftPower = turnPower;
-                rightPower = - turnPower;
+                leftPower = -turnPower;
+                rightPower = turnPower;
 
 
                 /*
@@ -863,6 +881,8 @@ void chassisTask(void* parameter){
 
                 leftSlew(leftPower);
                 rightSlew(rightPower);
+
+                printStats();
             }
 
             //point turn

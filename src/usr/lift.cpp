@@ -52,6 +52,10 @@ void liftPrintInfo(){
 
 }
 
+void clampPiston(bool val){
+    isClamped = val;
+}
+
 void setLiftMode(int mode){
     liftMode = mode;
 }
@@ -68,21 +72,21 @@ void liftOp(){
     lift.set_brake_mode(MOTOR_BRAKE_HOLD);
 
 
-    //lift 
-    if(master.get_digital(DIGITAL_R1) && liftPos <= LIFT_MAX){
+    //lift
+    if(master.get_digital(DIGITAL_L1) && liftPos <= LIFT_MAX){
         liftVel = OP_LIFT_VEL;
     }
-    else if(master.get_digital(DIGITAL_R2) && liftPos >= LIFT_MIN){
+    else if(master.get_digital(DIGITAL_L2) && liftPos >= LIFT_MIN){
         liftVel = -OP_LIFT_VEL;
     }
     lift.move_velocity(liftVel);
 
 
     //piston
-    if(master.get_digital(DIGITAL_L1)){
+    if(master.get_digital(DIGITAL_R1)){
         piston.set_value(true);
     }
-    else if(master.get_digital(DIGITAL_L2)){
+    else if(master.get_digital(DIGITAL_R2)){
         piston.set_value(false);
     }
 
@@ -112,7 +116,7 @@ void liftTask(void *param){
 
 
         liftPos = lift.get_position();
-        liftPrintInfo();
+        //liftPrintInfo();
 
         std::cout << liftPos << '\n';
 

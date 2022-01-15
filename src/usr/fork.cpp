@@ -4,7 +4,7 @@ pros::Motor forkLift(18, MOTOR_GEARSET_36, false, MOTOR_ENCODER_DEGREES);
 
 
 
-const int FORK_MAX = 480;
+const int FORK_MAX = 490;
 const double FORK_MIN = 5;
 
 const int FORK_LOW = 470;
@@ -64,16 +64,14 @@ void forkOp(){
 
     //absolute fork control
 
-    int forkVel = FORK_LIFT_VEL;
 
     if(master.get_digital(DIGITAL_X) && forkLiftPos <= FORK_MAX){
         forkLiftTarget = FORK_LOW;
-        forkVel = FORK_MAX_VEL;
     }
     else if(master.get_digital(DIGITAL_B) && forkLiftPos >= FORK_MIN){
         forkLiftTarget = FORK_HIGH;
     }
-    forkLift.move_absolute(forkLiftTarget, forkVel);
+    forkLift.move_absolute(forkLiftTarget, FORK_MAX_VEL);
 
 
 }
