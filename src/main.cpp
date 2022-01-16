@@ -23,14 +23,14 @@ void on_center_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	//autonomousChooserInit();
+	autonomousChooserInit();
 
 
 	pros::Task chassis_task(chassisTask);
 	pros::Task lift_task(liftTask);
 	pros::Task fork_task(forkTask);
 	clampPiston(true);
-	pros::lcd::initialize();
+	//pros::lcd::initialize();
 
 }
 
@@ -70,9 +70,9 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
-		//autonomousChooserExecuteAuto();
+		autonomousChooserExecuteAuto();
 		//leftBoth();
-		rightBoth();
+		//rightBoth();
 
 
 		pros::delay(5000);

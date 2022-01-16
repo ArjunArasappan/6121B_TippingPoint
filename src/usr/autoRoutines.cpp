@@ -1,32 +1,30 @@
 #include "main.h"
 
 void rightNeutral(){
+    moveForward(33.5);
     clampPiston(false);
-
-    pros::delay(1000);
-
-    clampPiston(true);
+    moveBack(32);
 
 }
 
 void rightAlliance(){
-    rightBoth();
+
 
 
 
 }
 
 void rightBoth(){
-    moveForward(14);
+    moveForward(14.5);
     clampPiston(false);
     moveBackAsync(14);
     pros::delay(630);
     clampPiston(true);
     chassisWaitUntilSettled();
-    turn(-50);
-    moveForward(33);
+    turn(-48);
+    moveForward(34);
     clampPiston(false);
-    moveBack(28);
+    moveBack(27);
 
 
 
@@ -46,7 +44,7 @@ void leftBoth(){
     chassisWaitUntilSettled();
 
     turn(-67);
-    moveForward(35);
+    moveForward(36);
     clampPiston(false);
     moveBack(35);
 
