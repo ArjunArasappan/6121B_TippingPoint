@@ -28,8 +28,10 @@ void initialize() {
 
 	pros::Task chassis_task(chassisTask);
 	pros::Task lift_task(liftTask);
-	pros::Task fork_task(forkTask);
+	pros::Task mogo_task(mogoTask);
+	pros::Task intake_task(intakeTask);
 	clampPiston(true);
+	setMogo(false);
 	//pros::lcd::initialize();
 
 }
@@ -95,12 +97,12 @@ void autonomous() {
 void opcontrol() {
 	pros::lcd::initialize();
 	while (true) {
-		// if(master.get_digital(DIGITAL_UP)){
-		// 	setChassisMode(1);
-		// 	moveForwardAsync(12);
-		// 	chassisWaitUntilSettled();
-		// 	setChassisMode(0);
-		// }
+		if(master.get_digital(DIGITAL_UP)){
+			setChassisMode(1);
+			moveForwardAsync(36);
+			chassisWaitUntilSettled();
+			setChassisMode(0);
+		}
 		// else if(master.get_digital(DIGITAL_DOWN)){
 		// 	setChassisMode(1);
 		// 	moveBack(10);
@@ -120,7 +122,8 @@ void opcontrol() {
 
 			setChassisMode(0);
 			setLiftMode(0);
-			setForkMode(0);
+			setMogoMode(0);
+			setIntakeMode(0);
 
 
 		pros::delay(20);

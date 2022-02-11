@@ -50,7 +50,7 @@ void autonomousChooserInit(){
 	lv_theme_alien_init(40, NULL);
 
 	lv_obj_t *title = lv_label_create(lv_scr_act(), NULL);
-	lv_label_set_text(title, "6121B Auto Selection");
+	lv_label_set_text(title, "6121B Auto Sauce");
 	lv_obj_align(title, NULL, LV_ALIGN_IN_TOP_MID, 0, 10);
 
 	lv_obj_t *btnm = lv_btnm_create(lv_scr_act(), NULL);

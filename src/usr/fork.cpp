@@ -1,14 +1,14 @@
 #include "main.h"
 
-pros::Motor forkLift(18, MOTOR_GEARSET_36, false, MOTOR_ENCODER_DEGREES);
+pros::Motor forkLift(FORK, MOTOR_GEARSET_36, true, MOTOR_ENCODER_DEGREES);
 
 
 
-const int FORK_MAX = 490;
-const double FORK_MIN = 5;
+const int FORK_MAX = 450;
+const double FORK_MIN = 3;
 
-const int FORK_LOW = 485;
-const int FORK_HIGH = 230;
+const int FORK_LOW = 440;
+const int FORK_HIGH = 217;
 
 const double FORK_KP = 35;
 const double FORK_KI = 0;
@@ -16,8 +16,8 @@ const double FORK_KD = 0;
 
 const int FORK_THRESHOLD_ERROR = 100;
 
-const int FORK_MAX_VEL = 110;
-const int OP_FORK_VEL = 80;
+const int FORK_MAX_VEL = 90;
+const int OP_FORK_VEL = 90;
 
 
 int forkLiftTarget = 0;
@@ -40,7 +40,7 @@ void setForkTarget(double target){
 }
 
 void forkPrintInfo(){
-	    pros::lcd::print(4, "forkLiftPos: %d\n", int(forkLiftPos));
+	    pros::lcd::print(0, "forkLiftPos: %d\n", int(forkLiftPos));
 }
 
 void setForkMode(int mode){
@@ -68,10 +68,10 @@ void forkOp(){
     if(master.get_digital(DIGITAL_X)){
         forkLiftTarget = FORK_LOW;
     }
-    else if(master.get_digital(DIGITAL_B)){
+    else if(master.get_digital(DIGITAL_A)){
         forkLiftTarget = FORK_HIGH;
     }
-    else if(master.get_digital(DIGITAL_A)){
+    else if(master.get_digital(DIGITAL_B)){
         forkLiftTarget = 5;
     }
 
@@ -95,7 +95,7 @@ void forkTask(void *param){
         }
 
         forkLiftPos = forkLift.get_position();
-        //forkPrintInfo();
+        forkPrintInfo();
 
 		pros::delay(20);
 	}

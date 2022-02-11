@@ -49,6 +49,8 @@
  #include "usr/lift.hpp"
  #include "usr/fork.hpp"
  #include "usr/misc.hpp"
+ #include "usr/intake.hpp"
+ #include "usr/mogo.hpp"
 //#include "okapi/api.hpp"
 //#include "pros/api_legacy.h"
 

@@ -1,9 +1,12 @@
 #include "main.h"
 
-pros::Motor left1(LEFTFRONT, MOTOR_GEARSET_18, false, MOTOR_ENCODER_DEGREES);
-pros::Motor left2(LEFTREAR, MOTOR_GEARSET_18, false, MOTOR_ENCODER_DEGREES);
-pros::Motor right1(RIGHTFRONT, MOTOR_GEARSET_18, true, MOTOR_ENCODER_DEGREES);
-pros::Motor right2(RIGHTREAR, MOTOR_GEARSET_18, true, MOTOR_ENCODER_DEGREES);
+pros::Motor left1(LEFTFRONT, MOTOR_GEARSET_18, true, MOTOR_ENCODER_DEGREES);
+pros::Motor leftMid(LEFTMID, MOTOR_GEARSET_18, false, MOTOR_ENCODER_DEGREES);
+pros::Motor left2(LEFTREAR, MOTOR_GEARSET_18, true, MOTOR_ENCODER_DEGREES);
+
+pros::Motor right1(RIGHTFRONT, MOTOR_GEARSET_18, false, MOTOR_ENCODER_DEGREES);
+pros::Motor rightMid(RIGHTMID, MOTOR_GEARSET_18, true, MOTOR_ENCODER_DEGREES);
+pros::Motor right2(RIGHTREAR, MOTOR_GEARSET_18, false, MOTOR_ENCODER_DEGREES);
 
 
 static int chassisMode = 1; //1 for forward/backward; 2 for turn; 3 for point turn; 4 for arcs
@@ -30,13 +33,13 @@ double D = 0;
 
 
 
-const double CHASSIS_KP = 0.40;
-const double CHASSIS_KI = 0.01;
-const double CHASSIS_KD = 1.25;
+const double CHASSIS_KP = 0.35;
+const double CHASSIS_KI = 0.00;
+const double CHASSIS_KD = 0.3;
 
 const double CHASSIS_ERROR_TRESH[] = {30, 7}; //1st bound starts timer, 2nd bound is for exit condition
 const double CHASSIS_DERIV_THRESH = 3; //derivative threshold
-const int CHASSIS_TIMEOUT[] = {1000, 200}; //max settling time
+const int CHASSIS_TIMEOUT[] = {600, 200}; //max settling time
 
 const double CHASSIS_LOWER_INTEGRAL_BOUND = CHASSIS_ERROR_TRESH[1] + 3;
 const double CHASSIS_UPPER_INTEGRAL_BOUND = 60;
@@ -135,6 +138,8 @@ const double ARC_KD[] = {0, 0};
 /**************************************************/
 //slant
 
+bool needSlant = true;
+
 static double slantDiff = 0;
 double slantGains = 0;
 double lastSlantDiff = 0;
@@ -202,31 +207,37 @@ double degreesToTicks(double degrees)
 //basic control
 void left(int power){
     left1.move(power);
+    leftMid.move(power);
     left2.move(power);
 }
 
 void right(int power){
     right1.move(power);
+    rightMid.move(power);
     right2.move(power);
 }
 
 void lockLeft(){
     left1.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    leftMid.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     left2.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 }
 
 void lockRight(){
     right1.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+    rightMid.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     right2.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 }
 
 void coastLeft(){
     left1.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    leftMid.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
     left2.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 }
 
 void coastRight(){
     right1.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+    rightMid.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
     right2.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 }
 
@@ -247,6 +258,7 @@ double getLeftPos(){
 void _leftReset()
 {
     left1.tare_position();
+    leftMid.tare_position();
     left2.tare_position();
 
     coastLeft();
@@ -261,7 +273,7 @@ void _leftReset()
 
     leftPower = 0;
     slewedLeftPower = 0;
-    lastSlewedLeftPower = 0;
+    //lastSlewedLeftPower = 0;
 
     leftLastDeriv = 0;
 
@@ -274,6 +286,7 @@ void _leftReset()
 void _rightReset()
 {
     right1.tare_position();
+    rightMid.tare_position();
     right2.tare_position();
 
     coastRight();
@@ -287,7 +300,7 @@ void _rightReset()
 
     rightPower = 0;
     slewedRightPower = 0;
-    lastSlewedRightPower = 0;
+    //lastSlewedRightPower = 0;
 
     rightLastDeriv = 0;
 
@@ -646,8 +659,8 @@ void chassisArcade(){
 
     int power = master.get_analog(ANALOG_LEFT_Y);
     int turn = master.get_analog(ANALOG_RIGHT_X);
-    int leftPower = power - turn;
-    int rightPower = power + turn;
+    int leftPower = power + turn;
+    int rightPower = power - turn;
     left(leftPower);
     right(rightPower);
 }
@@ -670,7 +683,6 @@ void printStats(){
     pros::lcd::print(3, "leftError: %d\n", (int)leftError);
     pros::lcd::print(4, "isRightSettled: %d\n", toInt(isRightSettled()));
     pros::lcd::print(5, "isLeftSettled: %d\n", toInt(isLeftSettled()));
-
     pros::lcd::print(6, "slantDiff: %d\n", (int)slantDiff);
     pros::lcd::print(7, "leftError: %d\n", (int)leftError);
     //pros::lcd::print(6, "turnError: %d\n", (int)turnError);
@@ -779,7 +791,7 @@ void chassisTask(void* parameter){
 
                 slantGains = slantDiff * SLANT_KP + slantDeriv * SLANT_KD;
 
-                if (leftPos > SLANT_THRESH * direc && rightPos > SLANT_THRESH * direc){
+                if (leftError > SLANT_THRESH * direc && lastLeftError > SLANT_THRESH * direc){
                     leftPower += slantGains;
                     rightPower -= slantGains;
                 }
