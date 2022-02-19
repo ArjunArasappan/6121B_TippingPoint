@@ -1,14 +1,19 @@
 #ifndef _AUTOROUTINES_HPP_
 #define _AUTOROUTINES_HPP_
 
-void rightNeutral();
+void rightNeutrals();
 
-void rightAlliance();
 
 void rightBoth();
 
+void leftNeutrals();
+
 void leftBoth();
 
-void leftNeutral();
+
+
+void soloAWP();
+
+void progSkills();
 
 #endif

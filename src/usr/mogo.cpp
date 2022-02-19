@@ -1,11 +1,10 @@
 #include "main.h"
 
-pros::ADIDigitalOut mogoIn(MOGO_IN);
-pros::ADIDigitalOut mogoOut(MOGO_OUT);
+pros::ADIDigitalOut mogo(MOGO_CLAMP);
 
 
 bool isMogoClamped = false; //false is out, true is active clamp
-bool buttonPress = false;
+bool mogoButtPress = false;
 
 int mogoMode = 1; //1 is auto, 0 is opcontrol
 int clickTimer = 0;
@@ -19,12 +18,12 @@ void setMogo(bool state){
 }
 
 void mogoOp(){
-    if(master.get_digital(DIGITAL_UP) && !buttonPress){
-        buttonPress = true;
+    if(master.get_digital(DIGITAL_X) && !mogoButtPress){
+        mogoButtPress = true;
         isMogoClamped = !isMogoClamped;
     }
-    else if(!master.get_digital(DIGITAL_UP)){
-        buttonPress = false;
+    else if(!master.get_digital(DIGITAL_X)){
+        mogoButtPress = false;
     }
 }
 
@@ -38,14 +37,12 @@ void mogoTask(void *param){
         }
 
         if(isMogoClamped){
-            mogoIn.set_value(true);
-            mogoOut.set_value(false);
-            pros::lcd::print(0, "clamp: %d\n", 0);
+            mogo.set_value(true);
+            //pros::lcd::print(0, "clamp: %d\n", 0);
         }
         else{
-            mogoIn.set_value(false);
-            mogoOut.set_value(true);
-            pros::lcd::print(0, "release: %d\n", 0);
+            mogo.set_value(false);
+            //pros::lcd::print(0, "release: %d\n", 0);
         }
 
 		pros::delay(20);

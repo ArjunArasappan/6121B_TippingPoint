@@ -3,20 +3,19 @@
 
 
 #define LEFTFRONT 20
-#define LEFTMID 12
+#define LEFTMID 9
 #define LEFTREAR 10
 
 #define RIGHTFRONT 11
-#define RIGHTMID 13
-#define RIGHTREAR 1
+#define RIGHTMID 1
+#define RIGHTREAR 2
 
-#define LIFT 18
+#define LIFT 17
 
-#define INTAKE 19
+#define INTAKE 18
 
 #define PISTON 'A'
-#define MOGO_IN 'B'
-#define MOGO_OUT 'C'
+#define MOGO_CLAMP 'B'
 
 extern pros::Controller master;
 

@@ -30,7 +30,7 @@ void initialize() {
 	pros::Task lift_task(liftTask);
 	pros::Task mogo_task(mogoTask);
 	pros::Task intake_task(intakeTask);
-	clampPiston(true);
+	clampPiston(false);
 	setMogo(false);
 	//pros::lcd::initialize();
 
@@ -41,7 +41,9 @@ void initialize() {
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
-void disabled() {}
+void disabled() {
+	setMogo(false);
+}
 
 /**
  * Runs after initialize(), and before autonomous when connected to the Field
@@ -72,9 +74,11 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
-		autonomousChooserExecuteAuto();
+		//autonomousChooserExecuteAuto();
+		//soloAWP();
 		//leftBoth();
-		//rightBoth();
+		//rightNeutrals();
+		leftNeutrals();
 
 
 		pros::delay(5000);
@@ -97,17 +101,14 @@ void autonomous() {
 void opcontrol() {
 	pros::lcd::initialize();
 	while (true) {
-		if(master.get_digital(DIGITAL_UP)){
+
+		if(master.get_digital(DIGITAL_RIGHT)){
 			setChassisMode(1);
-			moveForwardAsync(36);
-			chassisWaitUntilSettled();
+			setAccelStep(5);
+			setChassisMax(100);
+			moveForward(24);
 			setChassisMode(0);
 		}
-		// else if(master.get_digital(DIGITAL_DOWN)){
-		// 	setChassisMode(1);
-		// 	moveBack(10);
-		// 	setChassisMode(0);
-		// }
 		// else if (master.get_digital(DIGITAL_RIGHT)) {
 		// 	setChassisMode(2);
 		// 	turnAsync(360);
@@ -120,10 +121,10 @@ void opcontrol() {
 		// 	setForkMode(0);
 		// }
 
-			setChassisMode(0);
-			setLiftMode(0);
-			setMogoMode(0);
-			setIntakeMode(0);
+		setChassisMode(0);
+		setLiftMode(0);
+		setMogoMode(0);
+		setIntakeMode(0);
 
 
 		pros::delay(20);

@@ -6,5 +6,7 @@ void intakeTask(void* parameter);
 
 void setIntakeMode(int mode);
 
+void setIntakeVel(int vel);
+
 
 #endif

@@ -33,16 +33,16 @@ double D = 0;
 
 
 
-const double CHASSIS_KP = 0.35;
-const double CHASSIS_KI = 0.00;
-const double CHASSIS_KD = 0.3;
+const double CHASSIS_KP = 0.31;//0.3
+const double CHASSIS_KI = 0.22;
+const double CHASSIS_KD = 0.02;
 
-const double CHASSIS_ERROR_TRESH[] = {30, 7}; //1st bound starts timer, 2nd bound is for exit condition
+const double CHASSIS_ERROR_TRESH[] = {60, 6}; //1st bound starts timer, 2nd bound is for exit condition
 const double CHASSIS_DERIV_THRESH = 3; //derivative threshold
-const int CHASSIS_TIMEOUT[] = {600, 200}; //max settling time
+const int CHASSIS_TIMEOUT[] = {900, 200}; //max settling time
 
-const double CHASSIS_LOWER_INTEGRAL_BOUND = CHASSIS_ERROR_TRESH[1] + 3;
-const double CHASSIS_UPPER_INTEGRAL_BOUND = 60;
+const double CHASSIS_LOWER_INTEGRAL_BOUND = CHASSIS_ERROR_TRESH[1] + 1;
+const double CHASSIS_UPPER_INTEGRAL_BOUND = 90;
 const double CHASSIS_INTEGRAL_CAP = 0;
 
 
@@ -121,6 +121,14 @@ const double TURN_TIMEOUT = 1000;
 
 int turnAccelStep = 0;
 
+//delay distance
+
+bool isRightPast = false;
+bool isLeftPast = false;
+
+double degDist = 0;
+double inchFist = 0;
+
 /**************************************************/
 //point turns
 bool isPointTurnRight = true;
@@ -145,13 +153,13 @@ double slantGains = 0;
 double lastSlantDiff = 0;
 double slantDeriv = 0;
 
-const double SLANT_KP = 0;
+const double SLANT_KP = 0.22;
 const double SLANT_KD = 0;
 
 const double SLANT_TURN_KP = 0;
 const double SLANT_TURN_KD = 0;
 
-const double SLANT_THRESH = 15;
+const double SLANT_THRESH = 3;
 
 double slantState = 0;
 
@@ -166,14 +174,6 @@ void setChassisMax(int power){
 
 void setTurnMax(int power){
     TURN_MAX = power;
-}
-
-void setChassisAccel(int step){
-    chassisAccelStep = step;
-}
-
-void setTurnAccel(int step){
-    turnAccelStep = step;
 }
 
 void setChassisMode(int mode){
@@ -312,13 +312,17 @@ void _rightReset()
 
 /**************************************************/
 //slew control
-int accel_step = 4; //default acceleration
+int accel_step = 7; //default acceleration
 int decel_step = 256; // no decel slew
 int accel;
 int decel;
 
 int step;
 int direc;
+
+void setAccelStep(int st){
+    accel_step = st;
+}
 
 
 void leftSlew(int pwr){
@@ -414,9 +418,9 @@ bool isRightSettled(){
 
         rightExitTimer += 20;
 
-        if(rightSettleTimer > CHASSIS_TIMEOUT[0])
+        if(rightSettleTimer > CHASSIS_TIMEOUT[1])
             return true;
-        else if(rightExitTimer > CHASSIS_TIMEOUT[1])
+        else if(rightExitTimer > CHASSIS_TIMEOUT[0])
             return true;
 
         return false;
@@ -439,9 +443,9 @@ bool isLeftSettled(){
 
         leftExitTimer += 20;
 
-        if(leftSettleTimer > CHASSIS_TIMEOUT[0])
+        if(leftSettleTimer > CHASSIS_TIMEOUT[1])
             return true;
-        else if(leftExitTimer > CHASSIS_TIMEOUT[1])
+        else if(leftExitTimer > CHASSIS_TIMEOUT[0])
             return true;
 
         return false;
@@ -480,28 +484,45 @@ void turnWaitUntilSettled(){
     while(!isTurnSettled()) { pros::delay(20);}
 }
 
+void delayDist(double dist){
+    isRightPast = false;
+    isLeftPast = false;
+    degDist = inchesToTicks(dist);
+    while(!isRightPast || !isLeftPast){
+        if(abs(rightPos) > degDist){
+            isRightPast = true;
+        }
+        if(abs(leftPos) > degDist){
+            isLeftPast = true;
+        }
+
+        pros::delay(20);
+    }
+}
+
+
 void chassisWaitUntilSettled(){
     while(true) {
         pros::delay(20);
         switch (chassisMode) {
             case 1:
-            leftWaitUntilSettled();
-            rightWaitUntilSettled();
-            break;
+                leftWaitUntilSettled();
+                rightWaitUntilSettled();
+                break;
 
             case 2:
-            turnWaitUntilSettled();
-            break;
+                turnWaitUntilSettled();
+                break;
 
             case 3:
-            leftWaitUntilSettled();
-            rightWaitUntilSettled();
-            break;
+                leftWaitUntilSettled();
+                rightWaitUntilSettled();
+                break;
 
             case 4:
-            leftWaitUntilSettled();
-            rightWaitUntilSettled();
-            break;
+                leftWaitUntilSettled();
+                rightWaitUntilSettled();
+                break;
     }
     break;
 }
@@ -678,7 +699,7 @@ void printStats(){
     }
 
     pros::lcd::print(0, "turnError: %d\n",  (int)turnError);
-    pros::lcd::print(1, "turnPos: %d\n",  (int)turnPos);
+    pros::lcd::print(1, "turnError: %d\n",  (int)turnError);
     pros::lcd::print(2, "rightError: %d\n", (int)rightError);
     pros::lcd::print(3, "leftError: %d\n", (int)leftError);
     pros::lcd::print(4, "isRightSettled: %d\n", toInt(isRightSettled()));
@@ -705,6 +726,10 @@ void chassisTask(void* parameter){
         // }
         if(chassisMode == 0){
             chassisArcade();
+
+
+
+
             //printStats();
         }
 
@@ -791,9 +816,9 @@ void chassisTask(void* parameter){
 
                 slantGains = slantDiff * SLANT_KP + slantDeriv * SLANT_KD;
 
-                if (leftError > SLANT_THRESH * direc && lastLeftError > SLANT_THRESH * direc){
-                    leftPower += slantGains;
-                    rightPower -= slantGains;
+                if (slantDiff > SLANT_THRESH * direc && lastSlantDiff > SLANT_THRESH * direc){
+                    leftPower -= slantGains;
+                    rightPower += slantGains;
                 }
 
 

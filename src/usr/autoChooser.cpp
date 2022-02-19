@@ -7,10 +7,10 @@ Credit to VRC Team 315G for most of this code
 int autonNumber;
 bool redAlliance;
 
-static const char *btnm_map[] = {"R_Both", "L_Both", "R_Neut", "R_Al", "\n",
-				 "L_Neut",
-				 "", "", "", ""};
-static const char *auton_strings[] = {"R_Both", "L_Both", "R_Neut", "R_Al", "L_Neut", "", "", ""};
+static const char *btnm_map[] = {"R_Both", "L_Both", "R_Neuts", "L_Neuts", "\n",
+				 "Solo AWP",
+				 "ProgSkills", "", "", ""};
+static const char *auton_strings[] = {"R_Both", "L_Both", "R_Neuts", "L_Neuts", "Solo AWP", "ProgSkills", ""};
 static const char *alliance_map[] = {"Red", "Blue", ""};
 
 static lv_res_t btnm_action(lv_obj_t *btnm, const char *txt){
@@ -82,14 +82,16 @@ void autonomousChooserExecuteAuto(){
 			leftBoth();
 			break;
 		case 3:
-			rightNeutral();
+			rightNeutrals();
 			break;
 		case 4:
-
+			leftNeutrals();
 			break;
 		case 5:
+			soloAWP();
 			break;
-		case 7:
+		case 6:
+			progSkills();
 			break;
 		case 8:
 			break;

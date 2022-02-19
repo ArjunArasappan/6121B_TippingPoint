@@ -11,10 +11,12 @@ void chassisTask(void *);
 void setBrakeMode(int mode);
 
 void setChassisMax(int power);
-void setChassisAccel(int step);
 
 void setTurnMax(int power);
-void setTurnAccel(int step);
+
+void setAccelStep(int st);
+
+void delayDist(double dist);
 
 void leftWaitUntilSettled();
 void rightWaitUntilSettled();
