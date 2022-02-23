@@ -66,7 +66,7 @@ void rightBoth(){
     moveBack(10.5);
     setMogo(true);
     pros::delay(400);
-    setIntakeVel(200);
+    setIntakeVel(140);
     moveForward(18);
     setIntakeVel(0);
     setMogo(false);
@@ -83,16 +83,16 @@ void leftNeutrals(){
 
 
     //grab left neutral
-    moveForward(32.5);
+    moveForward(32.3);
     clampPiston(true);
     pros::delay(100);
-    moveBackAsync(32);
+    moveBackAsync(34.8);
     delayDist(1);
     setLiftTarget(200);
     chassisWaitUntilSettled();
 
     //turn to get alliance mogo
-    turn(103);
+    turn(99);
     moveBack(6);
     setMogo(true);
     pros::delay(100);

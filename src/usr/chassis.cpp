@@ -12,7 +12,9 @@ pros::Motor right2(RIGHTREAR, MOTOR_GEARSET_18, false, MOTOR_ENCODER_DEGREES);
 static int chassisMode = 1; //1 for forward/backward; 2 for turn; 3 for point turn; 4 for arcs
 
 const double WHEELBASE_WIDTH = 13.25;
-const int WHEEL_DIAM = 4;
+const double TRACKING_WIDTH = 0;
+const double WHEEL_DIAM = 4;
+const double TRACK_DIAM = 2.75;
 const double DRIVE_RATIO = 84/60;
 const double PI = 3.14159265;
 
@@ -31,7 +33,7 @@ double P = 0;
 double I = 0;
 double D = 0;
 
-
+int depth = 0;
 
 const double CHASSIS_KP = 0.31;//0.3
 const double CHASSIS_KI = 0.22;
@@ -190,17 +192,26 @@ double sgn(double value){
     return abs(value) / value;
 }
 
-double inchesToTicks(double inches)
-{
+double inchesToTicks(double inches){
 	double revolutions = inches / (WHEEL_DIAM * PI);
 	return revolutions * 360 / DRIVE_RATIO;
 }
 
-double degreesToTicks(double degrees)
-{
+double degreesToTicks(double degrees){
 	double distance_inches = ( PI * WHEELBASE_WIDTH * degrees) / 360.0;
 	double revolutions = (distance_inches / (WHEEL_DIAM * PI));
 	return revolutions * 360 * 60 / 84;
+}
+
+double tracking_inchesToTicks(double inches){
+    double revolutions = inches / (TRACK_DIAM * PI);
+	return revolutions * 360;
+}
+
+double tracking_degreesToTicks(double degrees){
+    double distance_inches = (PI * TRACKING_WIDTH * degrees) / 360.0;
+    double revolutions = (distance_inches / (TRACK_DIAM * PI));
+    return revolutions * 360;
 }
 
 /**************************************************/
@@ -218,12 +229,20 @@ void right(int power){
 }
 
 void lockLeft(){
+    left1.move_velocity(0);
+    leftMid.move_velocity(0);
+    left2.move_velocity(0);
+
     left1.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     leftMid.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     left2.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 }
 
 void lockRight(){
+    right1.move_velocity(0);
+    rightMid.move_velocity(0);
+    right2.move_velocity(0);
+
     right1.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     rightMid.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
     right2.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -243,6 +262,7 @@ void coastRight(){
 
 
 void reset(){
+    depth = 0;
     coastRight();
     coastLeft();
 }
@@ -620,8 +640,8 @@ void arcTurnAsync(double rad, double angle){
 
     double radius = abs(rad);
 
-    if(rad > 0) isPointTurnRight = true;
-    else isPointTurnRight = false;
+    if(rad > 0) isArcRight = true;
+    else isArcRight = false;
 
     //arcRatio = radius / (WHEELBASE_WIDTH + radius);
 
@@ -630,7 +650,7 @@ void arcTurnAsync(double rad, double angle){
 
     arcRatio = innerDist / outerDist;
 
-    if(isPointTurnRight){
+    if(isArcRight){
         leftMoveAsync(outerDist);
         rightMoveAsync(innerDist);
     }
@@ -840,6 +860,7 @@ void chassisTask(void* parameter){
                 std::cout << leftTarget << ", " << rightTarget << ", " << leftError << ", " << rightError << ", " << leftPos << ", " << rightPos << ", " << leftPower << ", " << rightPower << ", " << slewedLeftPower << ", " << slewedRightPower << ", " << lastSlewedLeftPower << ", " << lastSlewedRightPower << '\n';
 
                 printStats();
+
             }
 
             //turn
@@ -1092,10 +1113,7 @@ void chassisTask(void* parameter){
                     else if (leftPower < -CHASSIS_MAX)
                         leftPower = -CHASSIS_MAX;
 
-                    if (rightPower > CHASSIS_MAX * arcRatio)
-                        rightPower = CHASSIS_MAX * arcRatio;
-                    else if (rightPower < -CHASSIS_MAX * arcRatio)
-                        rightPower = -CHASSIS_MAX * arcRatio;
+                    rightPower = leftPower * arcRatio;
                 }
                 else{
                     if (leftPower > CHASSIS_MAX * arcRatio)

@@ -10,9 +10,9 @@
 #define RIGHTMID 1
 #define RIGHTREAR 2
 
-#define LIFT 17
+#define LIFT 18
 
-#define INTAKE 18
+#define INTAKE 14
 
 #define PISTON 'A'
 #define MOGO_CLAMP 'B'

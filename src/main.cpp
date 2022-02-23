@@ -74,11 +74,11 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
-		//autonomousChooserExecuteAuto();
+		autonomousChooserExecuteAuto();
 		//soloAWP();
 		//leftBoth();
 		//rightNeutrals();
-		leftNeutrals();
+		//leftNeutrals();
 
 
 		pros::delay(5000);
