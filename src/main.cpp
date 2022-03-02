@@ -23,16 +23,24 @@ void on_center_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
+	imu.reset();
+	while(imu.is_calibrating()){
+		pros::delay(20);
+	}
+
 	autonomousChooserInit();
+
+
 
 
 	pros::Task chassis_task(chassisTask);
 	pros::Task lift_task(liftTask);
 	pros::Task mogo_task(mogoTask);
 	pros::Task intake_task(intakeTask);
+
 	clampPiston(false);
 	setMogo(false);
-	//pros::lcd::initialize();
+	pros::lcd::initialize();
 
 }
 
@@ -42,7 +50,7 @@ void initialize() {
  * the robot is enabled, this task will exit.
  */
 void disabled() {
-	setMogo(false);
+
 }
 
 /**
@@ -58,6 +66,7 @@ void competition_initialize() {
 	while (true){
 		_leftReset();
 		_rightReset();
+		tareLift();
 		pros::delay(20);
 	}
 }
@@ -74,6 +83,9 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
+		_leftReset();
+		_rightReset();
+		tareLift();
 		autonomousChooserExecuteAuto();
 		//soloAWP();
 		//leftBoth();
@@ -104,17 +116,16 @@ void opcontrol() {
 
 		if(master.get_digital(DIGITAL_RIGHT)){
 			setChassisMode(1);
-			setAccelStep(5);
-			setChassisMax(100);
+			setAccelStep(7);
 			moveForward(24);
 			setChassisMode(0);
 		}
-		// else if (master.get_digital(DIGITAL_RIGHT)) {
-		// 	setChassisMode(2);
-		// 	turnAsync(360);
-		// 	chassisWaitUntilSettled();
-		// 	setChassisMode(0);
-		// }
+		else if (master.get_digital(DIGITAL_UP)) {
+			setChassisMode(2);
+			pointTurn(true, 90);
+			chassisWaitUntilSettled();
+			setChassisMode(0);
+		}
 		// else{
 		// 	setChassisMode(0);
 		// 	setLiftMode(0);

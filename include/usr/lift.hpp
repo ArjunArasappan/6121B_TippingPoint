@@ -14,6 +14,10 @@ void setLiftMode(int mode);
 
 void calcDelta();
 
+void tareLift();
+
+void liftDelay();
+
 void liftTask(void *param);
 
 

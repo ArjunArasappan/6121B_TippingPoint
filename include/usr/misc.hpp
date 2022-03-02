@@ -14,9 +14,18 @@
 
 #define INTAKE 14
 
+#define RIGHT_TRACKING_PORT 3
+#define LEFT_TRACKING_PORT 17
+
+#define IMU_PORT 12
+
 #define PISTON 'A'
 #define MOGO_CLAMP 'B'
 
 extern pros::Controller master;
+
+extern pros::Imu imu;
+
+
 
 #endif

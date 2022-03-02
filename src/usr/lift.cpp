@@ -41,8 +41,8 @@ void setLiftTarget(double target){
 }
 
 void liftPrintInfo(){
-	    pros::lcd::print(0, "liftPos: %d\n", int(liftPos));
-        pros::lcd::print(1, "liftPos: %d\n", int(liftMode));
+	    // pros::lcd::print(0, "liftPos: %d\n", int(liftPos));
+        // pros::lcd::print(1, "liftPos: %d\n", int(liftMode));
 
 }
 
@@ -102,7 +102,7 @@ void liftOp(){
         liftDelay();
         piston.set_value(false);
         isLiftClamped = false;
-        pros::delay(300);
+        pros::delay(700);
         liftTarget = liftPlat;
         lift.move_absolute(liftPlat, 100);
         opMode = 1;
@@ -125,12 +125,14 @@ void liftOp(){
 
 }
 
+void tareLift(){
+    lift.tare_position();
+}
 
 
 
 void liftTask(void *param){
     lift.tare_position();
-
 	while (true){
         liftPos = lift.get_position();
         if(liftMode == 0){

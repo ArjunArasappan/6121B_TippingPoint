@@ -8,9 +8,8 @@ int autonNumber;
 bool redAlliance;
 
 static const char *btnm_map[] = {"R_Both", "L_Both", "R_Neuts", "L_Neuts", "\n",
-				 "Solo AWP",
-				 "ProgSkills", "", "", ""};
-static const char *auton_strings[] = {"R_Both", "L_Both", "R_Neuts", "L_Neuts", "Solo AWP", "ProgSkills", ""};
+				 				 "Solo AWP", "ProgSkills", "", "", ""};
+static const char *auton_strings[] = {"R_Both", "L_Both", "R_Neuts", "L_Neuts", "Solo AWP", "ProgSkills", "", "", ""};
 static const char *alliance_map[] = {"Red", "Blue", ""};
 
 static lv_res_t btnm_action(lv_obj_t *btnm, const char *txt){
@@ -73,8 +72,7 @@ bool autonomousChooserGetRedAlliance(){
 
 void autonomousChooserExecuteAuto(){
 
-	if (redAlliance){
-		switch (autonNumber){
+	switch (autonNumber){
 		case 1:
 			rightBoth();
 			break;
@@ -93,40 +91,13 @@ void autonomousChooserExecuteAuto(){
 		case 6:
 			progSkills();
 			break;
-		case 8:
-			break;
-		default:
-			break;
-		}
-	}
-	else if (!redAlliance){
-		switch (autonNumber){
-		case 1:
-
-			break;
-		case 2:
-
-			break;
-		case 3:
-
-			break;
-		case 4:
-
-			break;
-		case 5:
-
-			break;
-		case 6:
-
-			break;
 		case 7:
-
 			break;
 		case 8:
-
+			break;
+		case 9:
 			break;
 		default:
 			break;
-		}
 	}
 }

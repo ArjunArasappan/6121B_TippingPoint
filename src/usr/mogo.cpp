@@ -3,6 +3,7 @@
 pros::ADIDigitalOut mogo(MOGO_CLAMP);
 
 
+
 bool isMogoClamped = false; //false is out, true is active clamp
 bool mogoButtPress = false;
 

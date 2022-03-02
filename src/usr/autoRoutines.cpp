@@ -1,7 +1,8 @@
 #include "main.h"
 
 void rightNeutrals(){
-    setAccelStep(6);
+    setChassisMax(127);
+    setAccelStep(7);
 
     //getNeutralMogo
     // moveBackAsync(30);
@@ -9,7 +10,6 @@ void rightNeutrals(){
     moveBackAsync(30);
     delayDist(29.6);
     setMogo(true);
-    chassisWaitUntilSettled();
     pros::delay(100);
     moveForward(23);
 
@@ -22,7 +22,7 @@ void rightNeutrals(){
     //get middle get middle neiutral
     moveForward(7);
     turn(46);
-    moveForward(28);
+    moveForward(27.5);
     clampPiston(true);
     pros::delay(100);
     moveBackAsync(28);
@@ -32,7 +32,7 @@ void rightNeutrals(){
     turn(46);
 
     //get AWP
-    moveBack(10);
+    moveBack(10.5);
     setMogo(true);
     pros::delay(100);
     setIntakeVel(100);
@@ -44,29 +44,27 @@ void rightNeutrals(){
 
 void rightBoth(){
 
-    setChassisMax(12000);
-    setAccelStep(8);
+    setAccelStep(9);
 
     //getNeutralMogo
-    moveForward(30);
-    pros::delay(10);
+    moveForwardAsync(30);
+    delayDist(29.6);
     clampPiston(true);
-    pros::delay(200);
+    pros::delay(150);
     setLiftTarget(200);
-    pros::delay(50);
+    pros::delay(100);
     moveBack(17);
 
     setAccelStep(6);
 
     //get AWP mogo
-    setChassisMax(9000);
     turn(90);
 
-    setAccelStep(4);
+    setAccelStep(6);
     moveBack(10.5);
     setMogo(true);
     pros::delay(400);
-    setIntakeVel(140);
+    setIntakeVel(450);
     moveForward(18);
     setIntakeVel(0);
     setMogo(false);
