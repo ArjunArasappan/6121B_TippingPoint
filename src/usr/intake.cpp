@@ -4,7 +4,7 @@ pros::Motor intake(INTAKE, MOTOR_GEARSET_06, false, MOTOR_ENCODER_DEGREES);
 
 int intakeMode = 1;
 
-int OP_INTAKE_VEL = 450;
+int OP_INTAKE_VEL = 420;
 
 int autoIntakeVel = 0;
 

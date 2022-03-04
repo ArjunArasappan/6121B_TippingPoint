@@ -5,12 +5,12 @@ Credit to VRC Team 315G for most of this code
 #include "main.h"
 
 int autonNumber;
-bool redAlliance;
+int driverState;
 
-static const char *btnm_map[] = {"R_Both", "L_Both", "R_Neuts", "L_Neuts", "\n",
-				 				 "Solo AWP", "ProgSkills", "", "", ""};
-static const char *auton_strings[] = {"R_Both", "L_Both", "R_Neuts", "L_Neuts", "Solo AWP", "ProgSkills", "", "", ""};
-static const char *alliance_map[] = {"Red", "Blue", ""};
+static const char *btnm_map[] = {"R1", "L1", "R2", "L2", "\n",
+				 				 "SoloAWP", "R_Rush", "L_Rush", "RMid_Rush", ""};
+static const char *auton_strings[] = {"R1", "L1", "R2", "L2", "SoloAWP", "R_Rush", "L_Rush", "RMid_Rush", ""};
+static const char *alliance_map[] = {"Driver", "Prog", " "};
 
 static lv_res_t btnm_action(lv_obj_t *btnm, const char *txt){
 	for (int i = 0; i < sizeof(auton_strings) / sizeof(auton_strings[0]); i++){
@@ -28,11 +28,14 @@ static lv_res_t btnm_action_color(lv_obj_t *btnm, const char *txt){
 	lv_btnm_set_toggle(btnm, true, 1);
 	lv_btnm_set_toggle(btnm, true, 2);
 
-	if (strcmp(txt, "Red") == 0){
-		redAlliance = true;
+	if (strcmp(txt, "Driver") == 0){
+		driverState = 0;
 	}
-	else if (strcmp(txt, "Blue") == 1){
-		redAlliance = false;
+	else if (strcmp(txt, "Prog") == 1){
+		driverState = 1;
+	}
+	else{
+		driverState = 2;
 	}
 
 	return LV_RES_OK; /*Return OK because the button matrix is not deleted*/
@@ -40,7 +43,7 @@ static lv_res_t btnm_action_color(lv_obj_t *btnm, const char *txt){
 
 void autonomousChooserPrintInfo(void *param){
 	while (true){
-		printf("%d %d\n", autonNumber, redAlliance);
+		printf("%d %d\n", autonNumber, driverState);
 		pros::delay(20);
 	}
 }
@@ -65,9 +68,9 @@ void autonomousChooserInit(){
 	lv_obj_align(allianceM, btnm, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
 }
 
-bool autonomousChooserGetRedAlliance(){
+bool autonomousChooserGetdriverState(){
 
-	return redAlliance;
+	return driverState;
 }
 
 void autonomousChooserExecuteAuto(){
@@ -99,5 +102,11 @@ void autonomousChooserExecuteAuto(){
 			break;
 		default:
 			break;
+	}
+
+	if(driverState == 0){
+	}
+	else if (driverState == 1){
+		progSkills();
 	}
 }

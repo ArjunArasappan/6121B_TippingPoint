@@ -20,6 +20,9 @@ void liftDelay();
 
 void liftTask(void *param);
 
+const int LIFT_PLAT = 700;
+const int LIFT_LOW_PLAT = 460;
+
 
 
 #endif

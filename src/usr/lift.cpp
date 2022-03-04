@@ -4,8 +4,8 @@ pros::Motor lift(LIFT, MOTOR_GEARSET_36, true, MOTOR_ENCODER_DEGREES);
 
 pros::ADIDigitalOut piston(PISTON);
 
-const int LIFT_MAX = 840;
-const double LIFT_MIN = -1;
+const int LIFT_MAX = 900;
+const double LIFT_MIN = -3;
 
 const int LIFT_MAX_VOL = 12000;
 const int OP_LIFT_VOL = 12000;
@@ -24,8 +24,6 @@ bool liftButtPress = false;
 
 int lastSet = 0;
 
-int liftPlat = 700;
-int liftLowPlat = 460;
 
 
 void clamp(bool state){
@@ -41,7 +39,7 @@ void setLiftTarget(double target){
 }
 
 void liftPrintInfo(){
-	    // pros::lcd::print(0, "liftPos: %d\n", int(liftPos));
+	     //pros::lcd::print(0, "liftPos: %d\n", int(liftPos));
         // pros::lcd::print(1, "liftPos: %d\n", int(liftMode));
 
 }
@@ -55,7 +53,7 @@ void setLiftMode(int mode){
 }
 
 void liftDelay(){
-    while(abs(liftTarget - liftPos) > 6 && !master.get_digital(DIGITAL_DOWN)){
+    while(fabs(liftTarget - liftPos) > 6 && !master.get_digital(DIGITAL_RIGHT)){
         liftPos = lift.get_position();
         pros::delay(20);
     }
@@ -82,8 +80,8 @@ void liftOp(){
 
     if(master.get_digital(DIGITAL_Y)){
         opMode = 1;
-        liftTarget = liftPlat;
-        lift.move_absolute(liftPlat, 100);
+        liftTarget = LIFT_PLAT;
+        lift.move_absolute(LIFT_PLAT, 100);
     }
 
     if(master.get_digital(DIGITAL_B)){
@@ -97,14 +95,14 @@ void liftOp(){
     }
 
     if(opMode == 2){
-        liftTarget = liftLowPlat;
-        lift.move_absolute(liftLowPlat, 100);
+        liftTarget = LIFT_LOW_PLAT;
+        lift.move_absolute(LIFT_LOW_PLAT, 100);
         liftDelay();
         piston.set_value(false);
         isLiftClamped = false;
         pros::delay(700);
-        liftTarget = liftPlat;
-        lift.move_absolute(liftPlat, 100);
+        liftTarget = LIFT_PLAT;
+        lift.move_absolute(LIFT_PLAT, 100);
         opMode = 1;
     }
     //piston

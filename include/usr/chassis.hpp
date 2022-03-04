@@ -6,6 +6,8 @@ void setChassisMode(int mode);
 void _leftReset();
 void _rightReset();
 
+void reset();
+
 void chassisTask(void *);
 
 void setBrakeMode(int mode);

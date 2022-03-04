@@ -32,6 +32,14 @@ int ARC_MAX = 127;
 bool isChassisLocked = false;
 bool lockButtPress = false;
 
+int driveVel = 60;
+
+bool parkButtPress = false;
+bool isParking = false;
+double parkAngleThresh = 17;
+double parkDist = 6;
+double driveDist = 36;
+
 static int chassis_maxSpeed = CHASSIS_MAX;
 static int turn_maxSpeed = TURN_MAX;
 static int point_maxSpeed = POINT_MAX;
@@ -45,25 +53,23 @@ int depth = 0;
 
 
 const double CHASSIS_KP = 0.31;//0.3
-
 const double CHASSIS_KI = 0.24;
 const double CHASSIS_KD = 0.03;
 
-const double TRACKING_CHASSIS_KP = 0.14;
-double rightAdj = 0.8;
-const double TRACKING_CHASSIS_KI = 0.015;
-const double TRACKING_CHASSIS_KD = 0.1;
+const double TRACKING_CHASSIS_KP = 0.148;//0.148
+const double TRACKING_CHASSIS_KI = 0.012;//0.012
+const double TRACKING_CHASSIS_KD = 0.160;//0.160
 
-const double CHASSIS_ERROR_TRESH[] = {60, 6}; //1st bound starts timer, 2nd bound is for exit condition //{60,7}
+
+const double CHASSIS_ERROR_TRESH[] = {60, 9}; //1st bound starts timer, 2nd bound is for exit condition //{60,7}
 const double CHASSIS_DERIV_THRESH = 3; //derivative threshold //3
-const int CHASSIS_TIMEOUT[] = {60000, 250}; //max settling time //1300, 120
+const int CHASSIS_TIMEOUT[] = {5000, 250}; //max settling time //1300, 120
 
 const double CHASSIS_LOWER_INTEGRAL_BOUND = CHASSIS_ERROR_TRESH[1];//5
 const double CHASSIS_UPPER_INTEGRAL_BOUND = 130;//60
 const double CHASSIS_INTEGRAL_CAP = 0;
 
 double chassisVolts = 8;
-
 
 int chassisAccelStep = 0;
 
@@ -129,18 +135,20 @@ const double TURN_KI = 0.0;
 const double TURN_KD = 3.0;
 
 const double TRACKING_TURN_KP = 0.45;
-const double TRACKING_TURN_KI = 0.0;
+const double TRACKING_TURN_KI = 0.01;
 const double TRACKING_TURN_KD = 1.5;
 
 const double TURN_ERROR_MIN = 0;
 
-const double TURN_LOWER_INTEGRAL_BOUND = 0;
-const double TURN_UPPER_INTEGRAL_BOUND = 0;
-const double TURN_INTEGRAL_CAP = 0;
 
-const double TURN_ERROR_TRESH[] = {7.5, 3.5}; //{15, 7}
+
+const double TURN_ERROR_TRESH[] = {10, 5}; //{15, 7}
 const double TURN_DERIV_THRESH = 4; //2
 const double TURN_TIMEOUT = 1000;
+
+const double TURN_LOWER_INTEGRAL_BOUND = TURN_ERROR_TRESH[4];
+const double TURN_UPPER_INTEGRAL_BOUND = 120;
+const double TURN_INTEGRAL_CAP = 0;
 
 int turnAccelStep = 0;
 
@@ -155,6 +163,18 @@ double inchFist = 0;
 /**************************************************/
 //point turns
 bool isPointTurnRight = true;
+
+const double TRACKING_POINT_KP = 0.46;//0.3
+const double TRACKING_POINT_KI = 0.0;
+const double TRACKING_POINT_KD = 0.00;
+
+
+const double POINT_ERROR_TRESH[] = {20, 4}; //1st bound starts timer, 2nd bound is for exit condition //{60,7}
+const int POINT_TIMEOUT[] = {3000, 250}; //max settling time //1300, 120
+
+const double POINT_LOWER_INT_BOUND = POINT_ERROR_TRESH[1];
+const double POINT_UPPER_INT_BOUND = 40;
+
 
 /**************************************************/
 //arc
@@ -176,16 +196,16 @@ double slantGains = 0;
 double lastSlantDiff = 0;
 double slantDeriv = 0;
 
-const double SLANT_KP = 0.09;
-const double SLANT_KI = 0;
+const double SLANT_KP = 0.07; //0.05
+const double SLANT_KI = 0.00; //0.003
+const double SLANT_KD = 0.12;
 
-const double SLANT_ACTIV_THRESH = 2;
+const double SLANT_ACTIV_THRESH = 3;//0.6
+const double SLANT_SETTLE_OFFSET = 999;
 
-const double SLANT_LOWER_INTEGRAL_BOUND = 2;//5
-const double SLANT_UPPER_INTEGRAL_BOUND = 15;//60
+const double SLANT_LOWER_INTEGRAL_BOUND = SLANT_ACTIV_THRESH;//5
+const double SLANT_UPPER_INTEGRAL_BOUND = 40;//60
 
-
-const double SLANT_KD = 0;
 
 double slantIntegral = 0;
 
@@ -221,6 +241,11 @@ int sgn(int value){
     return abs(value) / value;
 }
 
+double toDouble(float val){
+    int val2 = (val * 100000.0);
+    return (double)(val2 / 100000.0);
+}
+
 double sgn(double value){
     return abs(value) / value;
 }
@@ -249,6 +274,16 @@ double tracking_degreesToTicks(double degrees){
 
 /**************************************************/
 //basic control
+void setChassisVel(double vel){
+    left1.move_velocity(vel);
+    leftMid.move_velocity(vel);
+    left2.move_velocity(vel);
+
+    right1.move_velocity(vel);
+    rightMid.move_velocity(vel);
+    right2.move_velocity(vel);
+}
+
 void left(int power){
     left1.move(power);
     leftMid.move(power);
@@ -298,6 +333,8 @@ void reset(){
     depth = 0;
     coastRight();
     coastLeft();
+    imu.tare_rotation();
+    imu.tare_pitch();
 
 }
 
@@ -309,6 +346,13 @@ double getRightPos(){
 double getLeftPos(){
     //return left1.get_position();
     return leftTracker.get_position() / 100.0;
+}
+
+float getHeading(){
+    return imu.get_rotation();;
+}
+float getPitch(){
+    return imu.get_pitch();
 }
 
 void _leftReset()
@@ -531,8 +575,16 @@ bool isRightSettled(){
 
         rightExitTimer += 20;
 
-        if(rightSettleTimer > CHASSIS_TIMEOUT[1] && slantDiff <= SLANT_ACTIV_THRESH + 1)
-            return true;
+        if(rightSettleTimer > CHASSIS_TIMEOUT[1]){
+            if(chassisMode == 1){
+                if(fabs(slantDiff) <= SLANT_ACTIV_THRESH + SLANT_SETTLE_OFFSET){
+                    return true;
+                }
+            }
+            else{
+                return true;
+            }
+        }
         else if(rightExitTimer > CHASSIS_TIMEOUT[0])
             return true;
 
@@ -556,8 +608,18 @@ bool isLeftSettled(){
 
         leftExitTimer += 20;
 
-        if(leftSettleTimer > CHASSIS_TIMEOUT[1] && slantDiff <= SLANT_ACTIV_THRESH + 1)
-            return true;
+        if(leftSettleTimer > CHASSIS_TIMEOUT[1]){
+            if(chassisMode == 1){
+                if(fabs(slantDiff) <= SLANT_ACTIV_THRESH + SLANT_SETTLE_OFFSET){
+                    return true;
+                }
+            }
+            else{
+                return true;
+            }
+        }
+
+
         else if(leftExitTimer > CHASSIS_TIMEOUT[0])
             return true;
 
@@ -585,12 +647,72 @@ bool isTurnSettled(){
     return false;
 }
 
+bool isRightPointSettled(){
+
+    if(fabs(rightError) < POINT_ERROR_TRESH[0]){
+        if(fabs(rightError) <= POINT_ERROR_TRESH[1]){
+            rightSettleTimer += 20;
+        }
+        else{
+            rightSettleTimer = 0;
+        }
+
+        rightExitTimer += 20;
+
+        if(rightSettleTimer > POINT_TIMEOUT[1]){
+            return true;
+        }
+        else if(rightExitTimer > POINT_TIMEOUT[0])
+            return true;
+
+        return false;
+    }
+    else
+        rightExitTimer = 0;
+
+    return false;
+}
+
+bool isLeftPointSettled(){
+
+    if(fabs(leftError) < POINT_ERROR_TRESH[0]){
+        if(fabs(leftError) <= POINT_ERROR_TRESH[1]){
+            leftSettleTimer += 20;
+        }
+        else{
+            leftSettleTimer = 0;
+        }
+
+        leftExitTimer += 20;
+
+        if(leftSettleTimer > POINT_TIMEOUT[1]){
+            return true;
+        }
+        else if(leftExitTimer > CHASSIS_TIMEOUT[0])
+            return true;
+
+        return false;
+    }
+    else
+        leftExitTimer = 0;
+
+    return false;
+}
+
 void leftWaitUntilSettled(){
     while(!isLeftSettled()) { pros::delay(20);}
 }
 
 void rightWaitUntilSettled(){
     while(!isRightSettled()) { pros::delay(20);}
+}
+
+void leftPointWaitUntilSettled(){
+    while(!isLeftPointSettled()) { pros::delay(20);}
+}
+
+void rightPointWaitUntilSettled(){
+    while(!isRightPointSettled()) { pros::delay(20);}
 }
 
 void turnWaitUntilSettled(){
@@ -628,10 +750,12 @@ void chassisWaitUntilSettled(){
                 break;
 
             case 3:
-                if(isPointTurnRight)
-                    leftWaitUntilSettled();
-                else
-                    rightWaitUntilSettled();
+                if(isPointTurnRight){
+                    leftPointWaitUntilSettled();
+                }
+                else{
+                    rightPointWaitUntilSettled();
+                }
                 break;
 
             case 4:
@@ -648,6 +772,31 @@ void chassisWaitUntilSettled(){
 
 /**************************************************/
 //autonomous functions
+
+void parkPlat(){
+    int lpos = 0;
+    int rpos = 0;
+    reset();
+    _leftReset();
+    _rightReset();
+
+    setChassisVel(driveVel);
+    while(fabs(getPitch()) < parkAngleThresh && !master.get_digital(DIGITAL_RIGHT)){
+        pros::delay(20);
+    }
+
+    lpos = getLeftPos();
+    rpos = getRightPos();
+
+    while(leftPos - lpos < tracking_inchesToTicks(parkDist) && rightPos - rpos < tracking_inchesToTicks(parkDist) && !master.get_digital(DIGITAL_RIGHT)){
+        pros::delay(20);
+    }
+
+    setChassisVel(0);
+
+    isChassisLocked = true;
+    isParking = false;
+}
 
 void leftMoveAsync(double sp){
 	_leftReset();
@@ -707,11 +856,13 @@ void turn(double degrees){
 
 void pointTurnAsync(bool isRight, double angle){
     reset();
+    _leftReset();
+    _rightReset();
     chassisMode = 3;
     isPointTurnRight = isRight;
 
-    double outerDist = (((2 * PI * WHEELBASE_WIDTH)) * angle) / 360.0;
-    //double outerDist = (((2 * PI * TRACKING_WIDTH)) * angle) / 360.0;
+    //double outerDist = (((2 * PI * WHEELBASE_WIDTH)) * angle) / 360.0;
+    double outerDist = ((2 * PI * (TRACKING_WIDTH + TRACKING_OFFSET)) * angle) / 360.0;
 
     if(isRight){
         lockRight();
@@ -723,7 +874,10 @@ void pointTurnAsync(bool isRight, double angle){
     }
 }
 
+
 void pointTurn(bool isRight, double angle){
+
+    chassisMode = 3;
     pointTurnAsync(isRight, angle);
     if(isRight)
         leftWaitUntilSettled();
@@ -819,15 +973,14 @@ void printStats(){
 
     }
 
-    pros::c::quaternion_s_t qt = imu.get_quaternion();
 
-
-    pros::lcd::print(0, "{leftError: %d, rightError: %d}\n", (int)rightError, (int)leftError);
-    pros::lcd::print(1, "{leftSettle: %d, rightSettle: %d}\n", toInt(isRightSettled()), toInt(isLeftSettled()));
-    pros::lcd::print(2, "{turnError: %d, slantDiff: %d}\n",  (int)turnError, (int)slantDiff);
-    pros::lcd::print(3, "{leftPos: %d, rightPos: %d}\n", (int)getLeftPos(), (int)getRightPos());
-    pros::lcd::print(4, "{leftInt: %d, rightInt: %d}\n", (int)leftIntegral, (int)rightIntegral);
-    pros::lcd::print(5, "{depth: %d}\n", depth);
+    pros::lcd::print(0, "leftError: %d, rightError: %d\n", (int)leftError, (int)rightError);
+    pros::lcd::print(1, "lSet: %d, rSet: %d, tSet: %d\n", toInt(isRightSettled()), toInt(isLeftSettled()), toInt(isTurnSettled()));
+    pros::lcd::print(2, "slantDiff: %d, turnError: %d\n",  (int)slantDiff, (int)turnError);
+    pros::lcd::print(3, "leftPos: %d, rightPos: %d\n", (int)getLeftPos(), (int)getRightPos());
+    pros::lcd::print(4, "leftInt: %d, rightInt: %d\n", leftIntegral, rightIntegral);
+    pros::lcd::print(5, "depth: %d, slantInt: %d\n", depth, (int)slantDiff);
+    pros::lcd::print(6, "heading: %f, pitch: %f\n", getHeading(), getPitch());
     // pros::lcd::print(6, "{head: %d, pitch: %d, yaw: %d\n", (int)imu.get_heading(), (int)imu.get_pitch(), (int)imu.get_yaw());
     //
     // pros::lcd::print(7, "rot: %f\n", (float)imu.get_rotation());
@@ -866,7 +1019,18 @@ void chassisTask(void* parameter){
                 lockButtPress = false;
             }
 
-            if(isChassisLocked){
+            if(master.get_digital(DIGITAL_UP) && !parkButtPress){
+                parkButtPress = true;
+                isParking = !isParking;
+            }
+            else if(!master.get_digital(DIGITAL_LEFT)){
+                parkButtPress = false;
+            }
+
+            if(isParking){
+                parkPlat();
+            }
+            else if(isChassisLocked){
                 lockLeft();
                 lockRight();
             }
@@ -954,7 +1118,7 @@ void chassisTask(void* parameter){
                 //     rightIntegral = -CHASSIS_INTEGRAL_CAP;
 
                 //calcs power
-                rightPower = rightError * P * rightAdj + rightIntegral * I + rightDeriv * D;
+                rightPower = rightError * P + rightIntegral * I + rightDeriv * D;
 
                 //limits to bounds
                 if (rightPower > 127)
@@ -966,13 +1130,19 @@ void chassisTask(void* parameter){
                 SLANT CALCULATIONS
                 */
 
-                slantDiff = fabs(leftPos) - fabs(rightPos);
+                slantDiff = getLeftPos() - getRightPos();
                 slantDeriv = slantDiff - lastSlantDiff;
                 lastSlantDiff = slantDiff;
 
-                slantGains = slantDiff * SLANT_KP + slantDeriv * SLANT_KD;
 
-                if (abs(slantDiff) >= SLANT_ACTIV_THRESH){
+                if (fabs(slantDiff) < SLANT_UPPER_INTEGRAL_BOUND && fabs(slantDiff) > SLANT_LOWER_INTEGRAL_BOUND)
+                    slantIntegral += slantDiff;
+                else
+                    slantIntegral = 0;
+
+                slantGains = slantDiff * SLANT_KP + slantIntegral * SLANT_KI + slantDeriv * SLANT_KD;
+
+                if (fabs(slantDiff) >= SLANT_ACTIV_THRESH){
                     leftPower -= slantGains;
                     rightPower += slantGains;
                 }
@@ -995,9 +1165,11 @@ void chassisTask(void* parameter){
 
                 std::cout << leftTarget << ", " << rightTarget << ", " << leftError << ", " << rightError << ", " << leftPos << ", " << rightPos << ", " << leftPower << ", " << rightPower << ", " << slewedLeftPower << ", " << slewedRightPower << ", " << lastSlewedLeftPower << ", " << lastSlewedRightPower << '\n';
 
+                depth++;
+
                 printStats();
 
-                depth++;
+
 
             }
 
@@ -1016,20 +1188,20 @@ void chassisTask(void* parameter){
                 turnError = turnTarget - turnPos;
                 turnDeriv = turnError - lastTurnError;
                 lastTurnError = turnError;
-                leftPos = getLeftPos();
+
 
 
                 //checks if error is within integrating bounds
-                if (abs(turnError) < TURN_UPPER_INTEGRAL_BOUND || abs(leftError) > TURN_LOWER_INTEGRAL_BOUND)
+                if (fabs(turnError) < TURN_UPPER_INTEGRAL_BOUND || fabs(leftError) >= TURN_LOWER_INTEGRAL_BOUND)
                     turnIntegral += turnError;
                 else
                     turnIntegral = 0;
 
                 //caps integral
-                if (turnIntegral > TURN_INTEGRAL_CAP)
-                    turnIntegral = TURN_INTEGRAL_CAP;
-                else if (turnIntegral < -TURN_INTEGRAL_CAP)
-                    turnIntegral = -TURN_INTEGRAL_CAP;
+                // if (turnIntegral > TURN_INTEGRAL_CAP)
+                //     turnIntegral = TURN_INTEGRAL_CAP;
+                // else if (turnIntegral < -TURN_INTEGRAL_CAP)
+                //     turnIntegral = -TURN_INTEGRAL_CAP;
 
                 //calcs power
                 turnPower = turnError * P + turnIntegral * I + turnDeriv * D;
@@ -1084,9 +1256,9 @@ void chassisTask(void* parameter){
             //point turn
             else if(chassisMode == 3){
                 if(isPointTurnRight){
-                    P = CHASSIS_KP;
-                    I = CHASSIS_KI;
-                    D = CHASSIS_KD;
+                    P = TRACKING_POINT_KP;
+                    I = TRACKING_POINT_KI;
+                    D = TRACKING_POINT_KD;
 
                     /*
                     LEFT CALCULATIONS
@@ -1099,16 +1271,16 @@ void chassisTask(void* parameter){
 
 
                     //checks if error is within integrating bounds
-                    if (abs(leftError) < CHASSIS_UPPER_INTEGRAL_BOUND || abs(leftError) > CHASSIS_LOWER_INTEGRAL_BOUND)
+                    if (fabs(leftError) < POINT_UPPER_INT_BOUND && fabs(leftError) >= POINT_LOWER_INT_BOUND)
                         leftIntegral += leftError;
                     else
                         leftIntegral = 0;
 
                     //caps integral
-                    if (leftIntegral > CHASSIS_INTEGRAL_CAP)
-                        leftIntegral = CHASSIS_INTEGRAL_CAP;
-                    else if (leftIntegral < -CHASSIS_INTEGRAL_CAP)
-                        leftIntegral = -CHASSIS_INTEGRAL_CAP;
+                    // if (leftIntegral > CHASSIS_INTEGRAL_CAP)
+                    //     leftIntegral = CHASSIS_INTEGRAL_CAP;
+                    // else if (leftIntegral < -CHASSIS_INTEGRAL_CAP)
+                    //     leftIntegral = -CHASSIS_INTEGRAL_CAP;
 
                     //calcs power
                     leftPower = leftError * P + leftIntegral * I + leftDeriv * D;
@@ -1131,9 +1303,9 @@ void chassisTask(void* parameter){
                     printStats();
                 }
                 else{
-                    P = TURN_KP;
-                    I = TURN_KI;
-                    D = TURN_KD;
+                    P = TRACKING_POINT_KP;
+                    I = TRACKING_POINT_KI;
+                    D = TRACKING_POINT_KD;
 
                     /*
                     RIGHT CALCULATIONS
@@ -1146,16 +1318,16 @@ void chassisTask(void* parameter){
 
 
                     //checks if error is within integrating bounds
-                    if (abs(rightError) < CHASSIS_UPPER_INTEGRAL_BOUND || abs(rightError) > CHASSIS_LOWER_INTEGRAL_BOUND)
+                    if (fabs(rightError) < POINT_UPPER_INT_BOUND && fabs(rightError) >= POINT_LOWER_INT_BOUND)
                         rightIntegral += rightError;
                     else
                         rightIntegral = 0;
 
-                    //caps integral
-                    if (rightIntegral > CHASSIS_INTEGRAL_CAP)
-                        rightIntegral = CHASSIS_INTEGRAL_CAP;
-                    else if (rightIntegral < -CHASSIS_INTEGRAL_CAP)
-                        rightIntegral = -CHASSIS_INTEGRAL_CAP;
+                    // //caps integral
+                    // if (rightIntegral > CHASSIS_INTEGRAL_CAP)
+                    //     rightIntegral = CHASSIS_INTEGRAL_CAP;
+                    // else if (rightIntegral < -CHASSIS_INTEGRAL_CAP)
+                    //     rightIntegral = -CHASSIS_INTEGRAL_CAP;
 
                     //calcs power
                     rightPower = rightError * P + rightIntegral * I + rightDeriv * D;

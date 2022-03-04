@@ -50,6 +50,7 @@ void initialize() {
  * the robot is enabled, this task will exit.
  */
 void disabled() {
+	clampPiston(true);
 
 }
 
@@ -86,6 +87,7 @@ void autonomous() {
 		_leftReset();
 		_rightReset();
 		tareLift();
+		reset();
 		autonomousChooserExecuteAuto();
 		//soloAWP();
 		//leftBoth();
@@ -116,13 +118,15 @@ void opcontrol() {
 
 		if(master.get_digital(DIGITAL_RIGHT)){
 			setChassisMode(1);
-			setAccelStep(7);
-			moveForward(24);
+			setAccelStep(8);
+			//moveForward(24);
+			turn(360);
+			turn(-360);
 			setChassisMode(0);
 		}
-		else if (master.get_digital(DIGITAL_UP)) {
-			setChassisMode(2);
-			pointTurn(true, 90);
+		else if (master.get_digital(DIGITAL_DOWN)) {
+			setAccelStep(8);
+			pointTurnAsync(true, 90);
 			chassisWaitUntilSettled();
 			setChassisMode(0);
 		}
