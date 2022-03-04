@@ -176,16 +176,35 @@ void soloAWP(){
 }
 
 void progSkills(){
+    setAccelStep(7);
+
+    //clamp mogo and go to neutral
     setMogo(true);
-    pros::delay(100);
-    setLiftTarget(200);
-    turn(90);
-    setIntakeVel(150);
-    pros::delay(2000);
-    setIntakeVel(0);
-    setLiftTarget(0);
-    pros::delay(500);
+    pros::delay(150);
+    moveForward(6);
+    pointTurn(true, 120);
+    moveForward(38);
+
+    //clamp neutral
+    clampPiston(true);
+    pros::delay(150);
+    setLiftTarget(LIFT_PLAT);
+    moveForward(25);
 
 
-    moveBack(80);
+
+
+
+    // setMogo(true);
+    // pros::delay(100);
+    // setLiftTarget(200);
+    // turn(90);
+    // setIntakeVel(150);
+    // pros::delay(2000);
+    // setIntakeVel(0);
+    // setLiftTarget(0);
+    // pros::delay(500);
+    //
+    //
+    // moveBack(80);
 }

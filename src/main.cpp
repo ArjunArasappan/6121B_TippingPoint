@@ -40,7 +40,7 @@ void initialize() {
 
 	clampPiston(false);
 	setMogo(false);
-	pros::lcd::initialize();
+	//pros::lcd::initialize();
 
 }
 
@@ -51,7 +51,6 @@ void initialize() {
  */
 void disabled() {
 	clampPiston(true);
-
 }
 
 /**
@@ -88,7 +87,9 @@ void autonomous() {
 		_rightReset();
 		tareLift();
 		reset();
-		autonomousChooserExecuteAuto();
+
+		progSkills();
+		//autonomousChooserExecuteAuto();
 		//soloAWP();
 		//leftBoth();
 		//rightNeutrals();
@@ -118,16 +119,15 @@ void opcontrol() {
 
 		if(master.get_digital(DIGITAL_RIGHT)){
 			setChassisMode(1);
-			setAccelStep(8);
+			setAccelStep(7);
 			//moveForward(24);
-			turn(360);
-			turn(-360);
+			pointTurn(true, 90);
 			setChassisMode(0);
 		}
 		else if (master.get_digital(DIGITAL_DOWN)) {
-			setAccelStep(8);
-			pointTurnAsync(true, 90);
-			chassisWaitUntilSettled();
+			setAccelStep(7);
+			moveForward(24);
+			moveBack(24);
 			setChassisMode(0);
 		}
 		// else{

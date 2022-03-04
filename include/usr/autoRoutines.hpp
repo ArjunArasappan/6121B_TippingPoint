@@ -3,7 +3,6 @@
 
 void rightNeutrals();
 
-
 void rightBoth();
 
 void leftNeutrals();

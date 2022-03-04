@@ -29,6 +29,13 @@ void setIntakeVel(int vel){
     autoIntakeVel = vel;
 }
 
+void setIntake(bool state){
+    if(state)
+        autoIntakeVel = OP_INTAKE_VEL;
+    else
+        autoIntakeVel = 0;
+}
+
 
 void intakeTask(void* parameter) {
     intake.tare_position();

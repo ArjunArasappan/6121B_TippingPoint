@@ -26,8 +26,9 @@ const double PI = 3.14159265;
 
 int CHASSIS_MAX = 127;
 int TURN_MAX = 90; //70
-int POINT_MAX = 127;
+int POINT_MAX = 90;
 int ARC_MAX = 127;
+
 
 bool isChassisLocked = false;
 bool lockButtPress = false;
@@ -56,14 +57,14 @@ const double CHASSIS_KP = 0.31;//0.3
 const double CHASSIS_KI = 0.24;
 const double CHASSIS_KD = 0.03;
 
-const double TRACKING_CHASSIS_KP = 0.148;//0.148
-const double TRACKING_CHASSIS_KI = 0.012;//0.012
-const double TRACKING_CHASSIS_KD = 0.160;//0.160
+const double TRACKING_CHASSIS_KP = 0.148;//0.148 ,0.1505
+const double TRACKING_CHASSIS_KI = 0.012;//0.012 ,0.001
+const double TRACKING_CHASSIS_KD = 0.160;//0.160 ,0.01
 
 
-const double CHASSIS_ERROR_TRESH[] = {60, 9}; //1st bound starts timer, 2nd bound is for exit condition //{60,7}
+const double CHASSIS_ERROR_TRESH[] = {60, 10}; //1st bound starts timer, 2nd bound is for exit condition //{60,7}
 const double CHASSIS_DERIV_THRESH = 3; //derivative threshold //3
-const int CHASSIS_TIMEOUT[] = {5000, 250}; //max settling time //1300, 120
+const int CHASSIS_TIMEOUT[] = {5000, 170}; //max settling time //1300, 120
 
 const double CHASSIS_LOWER_INTEGRAL_BOUND = CHASSIS_ERROR_TRESH[1];//5
 const double CHASSIS_UPPER_INTEGRAL_BOUND = 130;//60
@@ -164,16 +165,16 @@ double inchFist = 0;
 //point turns
 bool isPointTurnRight = true;
 
-const double TRACKING_POINT_KP = 0.46;//0.3
-const double TRACKING_POINT_KI = 0.0;
-const double TRACKING_POINT_KD = 0.08;
+const double TRACKING_POINT_KP = 0.35;//0.3
+const double TRACKING_POINT_KI = 0.05;
+const double TRACKING_POINT_KD = 0.45;
 
 
 const double POINT_ERROR_TRESH[] = {20, 4}; //1st bound starts timer, 2nd bound is for exit condition //{60,7}
-const int POINT_TIMEOUT[] = {3000, 250}; //max settling time //1300, 120
+const int POINT_TIMEOUT[] = {9000, 150}; //max settling time //1300, 120
 
 const double POINT_LOWER_INT_BOUND = POINT_ERROR_TRESH[1];
-const double POINT_UPPER_INT_BOUND = 40;
+const double POINT_UPPER_INT_BOUND = 30;
 
 
 /**************************************************/
@@ -196,9 +197,9 @@ double slantGains = 0;
 double lastSlantDiff = 0;
 double slantDeriv = 0;
 
-const double SLANT_KP = 0.07; //0.05
+const double SLANT_KP = 0.00; //0.05
 const double SLANT_KI = 0.00; //0.003
-const double SLANT_KD = 0.12;
+const double SLANT_KD = 0.00;
 
 const double SLANT_ACTIV_THRESH = 3;//0.6
 const double SLANT_SETTLE_OFFSET = 999;
@@ -774,21 +775,23 @@ void chassisWaitUntilSettled(){
 //autonomous functions
 
 void parkPlat(){
-    int lpos = 0;
-    int rpos = 0;
     reset();
     _leftReset();
     _rightReset();
 
     setChassisVel(driveVel);
-    while(fabs(getPitch()) < parkAngleThresh && !master.get_digital(DIGITAL_RIGHT)){
+    while(fabs(getPitch()) < parkAngleThresh &&
+          !master.get_digital(DIGITAL_RIGHT)){
         pros::delay(20);
     }
 
-    lpos = getLeftPos();
-    rpos = getRightPos();
 
-    while(leftPos - lpos < tracking_inchesToTicks(parkDist) && rightPos - rpos < tracking_inchesToTicks(parkDist) && !master.get_digital(DIGITAL_RIGHT)){
+    leftTracker.reset_position();
+    rightTracker.reset_position();
+
+    while(getLeftPos() < tracking_inchesToTicks(parkDist) &&
+          getRightPos() < tracking_inchesToTicks(parkDist) &&
+          !master.get_digital(DIGITAL_RIGHT)){
         pros::delay(20);
     }
 
@@ -1267,7 +1270,7 @@ void chassisTask(void* parameter){
                     leftPos = getLeftPos();
                     leftError = leftTarget - leftPos;
                     leftDeriv = leftError - lastLeftError;
-                    lastLeftError = lastError;
+                    lastLeftError = leftError;
 
 
                     //checks if error is within integrating bounds
@@ -1293,10 +1296,10 @@ void chassisTask(void* parameter){
 
                     //OUTPUT
 
-                    if (leftPower > CHASSIS_MAX)
-                        leftPower = CHASSIS_MAX;
-                    else if (leftPower < -CHASSIS_MAX)
-                        leftPower = -CHASSIS_MAX;
+                    if (leftPower > POINT_MAX)
+                        leftPower = POINT_MAX;
+                    else if (leftPower < -POINT_MAX)
+                        leftPower = -POINT_MAX;
 
                     leftSlew(leftPower);
 
@@ -1339,10 +1342,10 @@ void chassisTask(void* parameter){
                         rightPower = -127;
 
                     //OUTPUT
-                    if (rightPower > CHASSIS_MAX)
-                        rightPower = CHASSIS_MAX;
-                    else if (rightPower < -CHASSIS_MAX)
-                        rightPower = -CHASSIS_MAX;
+                    if (rightPower > POINT_MAX)
+                        rightPower = POINT_MAX;
+                    else if (rightPower < -POINT_MAX)
+                        rightPower = -POINT_MAX;
 
                     rightSlew(rightPower);
 

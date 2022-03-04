@@ -8,5 +8,7 @@ void setIntakeMode(int mode);
 
 void setIntakeVel(int vel);
 
+void setIntake(bool state);
+
 
 #endif
