@@ -12,6 +12,9 @@ const int OP_LIFT_VOL = 12000;
 
 const int LIFT_MAX_VEL = 100;
 
+
+const int driverLiftThresh = 200;
+
 double liftTarget = 0;
 int liftPos = 0;
 int liftPower;
@@ -133,6 +136,16 @@ void liftTask(void *param){
     lift.tare_position();
 	while (true){
         liftPos = lift.get_position();
+
+        if(liftPos > driverLiftThresh){
+            driver_isLiftPast = true;
+        }
+        else{
+            driver_isLiftPast = false;
+        }
+
+
+
         if(liftMode == 0){
             liftOp();
 

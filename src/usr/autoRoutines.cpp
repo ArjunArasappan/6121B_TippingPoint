@@ -69,8 +69,6 @@ void rightBoth(){
     setIntakeVel(0);
     setMogo(false);
 
-
-
 }
 
 
@@ -119,8 +117,6 @@ void leftBoth(){
     moveForward(38);
     clampPiston(true);
     moveBack(35);
-
-
 }
 
 
@@ -153,13 +149,6 @@ void soloAWP(){
     moveForward(18);
     setIntakeVel(0);
 
-
-
-
-
-
-
-
     // moveForward(14.5);
     // clampPiston(true);
     // moveBackAsync(14);
@@ -174,6 +163,12 @@ void soloAWP(){
 
 
 }
+
+void rightRush();
+
+void leftRush();
+
+void rightMidRush();
 
 void progSkills(){
     setAccelStep(7);
@@ -191,20 +186,4 @@ void progSkills(){
     setLiftTarget(LIFT_PLAT);
     moveForward(25);
 
-
-
-
-
-    // setMogo(true);
-    // pros::delay(100);
-    // setLiftTarget(200);
-    // turn(90);
-    // setIntakeVel(150);
-    // pros::delay(2000);
-    // setIntakeVel(0);
-    // setLiftTarget(0);
-    // pros::delay(500);
-    //
-    //
-    // moveBack(80);
 }

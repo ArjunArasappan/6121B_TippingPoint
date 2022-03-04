@@ -4,9 +4,11 @@ pros::Motor intake(INTAKE, MOTOR_GEARSET_06, false, MOTOR_ENCODER_DEGREES);
 
 int intakeMode = 1;
 
-int OP_INTAKE_VEL = 420;
+int OP_INTAKE_VEL = 450;
 
 int autoIntakeVel = 0;
+
+bool isDriverIntake = false;
 
 void intakeOpControl() {
   if (master.get_digital(DIGITAL_R2)) {
@@ -19,6 +21,14 @@ void intakeOpControl() {
     intake.move_velocity(0);
   }
 
+  if(isDriverIntake && driver_isLiftPast){
+      intake.move_velocity(OP_INTAKE_VEL);
+  }
+
+}
+
+void setDriverIntake(bool state){
+    isDriverIntake = state;
 }
 
 void setIntakeMode(int mode){

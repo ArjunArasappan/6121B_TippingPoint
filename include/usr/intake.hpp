@@ -10,5 +10,7 @@ void setIntakeVel(int vel);
 
 void setIntake(bool state);
 
+void setDriverIntake(bool state);
+
 
 #endif

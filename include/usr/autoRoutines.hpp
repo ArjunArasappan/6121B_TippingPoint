@@ -9,9 +9,13 @@ void leftNeutrals();
 
 void leftBoth();
 
-
-
 void soloAWP();
+
+void rightRush();
+
+void leftRush();
+
+void rightMidRush();
 
 void progSkills();
 

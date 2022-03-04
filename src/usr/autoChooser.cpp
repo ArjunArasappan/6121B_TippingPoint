@@ -58,14 +58,19 @@ void autonomousChooserExecuteAuto(){
 			soloAWP();
 			break;
 		case 6:
-			progSkills();
+			rightRush();
 			break;
 		case 7:
+			leftRush();
 			break;
 		case 8:
+			rightMidRush();
 			break;
 		case 9:
+			setDriverIntake(true);
 			break;
+		case 10:
+			progSkills();
 		default:
 			break;
 	}
