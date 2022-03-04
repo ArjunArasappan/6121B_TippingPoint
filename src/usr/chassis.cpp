@@ -166,7 +166,7 @@ bool isPointTurnRight = true;
 
 const double TRACKING_POINT_KP = 0.46;//0.3
 const double TRACKING_POINT_KI = 0.0;
-const double TRACKING_POINT_KD = 0.00;
+const double TRACKING_POINT_KD = 0.08;
 
 
 const double POINT_ERROR_TRESH[] = {20, 4}; //1st bound starts timer, 2nd bound is for exit condition //{60,7}
@@ -1267,7 +1267,7 @@ void chassisTask(void* parameter){
                     leftPos = getLeftPos();
                     leftError = leftTarget - leftPos;
                     leftDeriv = leftError - lastLeftError;
-                    lastLeftError = leftDeriv;
+                    lastLeftError = lastError;
 
 
                     //checks if error is within integrating bounds
@@ -1314,7 +1314,7 @@ void chassisTask(void* parameter){
                     rightPos = getRightPos();
                     rightError = rightTarget - rightPos;
                     rightDeriv = rightError - lastRightError;
-                    lastRightError = rightDeriv;
+                    lastRightError = rightError;
 
 
                     //checks if error is within integrating bounds
