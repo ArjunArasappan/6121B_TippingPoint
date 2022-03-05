@@ -12,5 +12,7 @@ void setIntake(bool state);
 
 void setDriverIntake(bool state);
 
+extern bool driver_isLiftPast;
+
 
 #endif

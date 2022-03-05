@@ -67,10 +67,11 @@ void autonomousChooserExecuteAuto(){
 			rightMidRush();
 			break;
 		case 9:
-			setDriverIntake(true);
+			//setDriverIntake(true);
 			break;
 		case 10:
 			progSkills();
+			break;
 		default:
 			break;
 	}

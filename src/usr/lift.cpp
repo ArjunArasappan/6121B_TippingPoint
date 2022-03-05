@@ -14,6 +14,7 @@ const int LIFT_MAX_VEL = 100;
 
 
 const int driverLiftThresh = 200;
+bool driver_isLiftPast = false;
 
 double liftTarget = 0;
 int liftPos = 0;

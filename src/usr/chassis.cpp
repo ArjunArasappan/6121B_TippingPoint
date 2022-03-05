@@ -25,7 +25,7 @@ const double DRIVE_RATIO = 84/60;
 const double PI = 3.14159265;
 
 int CHASSIS_MAX = 127;
-int TURN_MAX = 90; //70
+int TURN_MAX = 80; //70
 int POINT_MAX = 90;
 int ARC_MAX = 127;
 
@@ -33,12 +33,12 @@ int ARC_MAX = 127;
 bool isChassisLocked = false;
 bool lockButtPress = false;
 
-int driveVel = 60;
+int driveVel = 40;
 
 bool parkButtPress = false;
 bool isParking = false;
-double parkAngleThresh = 17;
-double parkDist = 6;
+double parkAngleThresh = 20;
+double parkDist = 20;
 double driveDist = 36;
 
 static int chassis_maxSpeed = CHASSIS_MAX;
@@ -57,14 +57,14 @@ const double CHASSIS_KP = 0.31;//0.3
 const double CHASSIS_KI = 0.24;
 const double CHASSIS_KD = 0.03;
 
-const double TRACKING_CHASSIS_KP = 0.148;//0.148 ,0.1505
-const double TRACKING_CHASSIS_KI = 0.012;//0.012 ,0.001
-const double TRACKING_CHASSIS_KD = 0.160;//0.160 ,0.01
+const double TRACKING_CHASSIS_KP = 0.21;//0.148 ,0.1505
+const double TRACKING_CHASSIS_KI = 0.00;//0.012 ,0.001
+const double TRACKING_CHASSIS_KD = 0.08;//.150;//0.160 ,0.01
 
 
-const double CHASSIS_ERROR_TRESH[] = {60, 10}; //1st bound starts timer, 2nd bound is for exit condition //{60,7}
+const double CHASSIS_ERROR_TRESH[] = {60, 10}; //1st bound starts timer, 2nd bound is for exit condition //{60,13}
 const double CHASSIS_DERIV_THRESH = 3; //derivative threshold //3
-const int CHASSIS_TIMEOUT[] = {5000, 170}; //max settling time //1300, 120
+const int CHASSIS_TIMEOUT[] = {5000, 250}; //max settling time //1300, 120
 
 const double CHASSIS_LOWER_INTEGRAL_BOUND = CHASSIS_ERROR_TRESH[1];//5
 const double CHASSIS_UPPER_INTEGRAL_BOUND = 130;//60
@@ -141,10 +141,8 @@ const double TRACKING_TURN_KD = 1.5;
 
 const double TURN_ERROR_MIN = 0;
 
-
-
-const double TURN_ERROR_TRESH[] = {10, 5}; //{15, 7}
-const double TURN_DERIV_THRESH = 4; //2
+const double TURN_ERROR_TRESH[] = {15, 7}; //{15, 7}
+const double TURN_DERIV_THRESH = 1; //2
 const double TURN_TIMEOUT = 1000;
 
 const double TURN_LOWER_INTEGRAL_BOUND = TURN_ERROR_TRESH[4];

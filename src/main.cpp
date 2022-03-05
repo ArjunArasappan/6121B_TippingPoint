@@ -88,11 +88,11 @@ void autonomous() {
 		tareLift();
 		reset();
 
-		progSkills();
+		//progSkills();
 		//autonomousChooserExecuteAuto();
 		//soloAWP();
 		//leftBoth();
-		//rightNeutrals();
+		rightNeutrals();
 		//leftNeutrals();
 
 
@@ -120,14 +120,13 @@ void opcontrol() {
 		if(master.get_digital(DIGITAL_RIGHT)){
 			setChassisMode(1);
 			setAccelStep(7);
-			//moveForward(24);
-			pointTurn(true, 90);
+			moveForward(24);
+			//turn(90);
 			setChassisMode(0);
 		}
 		else if (master.get_digital(DIGITAL_DOWN)) {
 			setAccelStep(7);
-			moveForward(24);
-			moveBack(24);
+			moveForward(7);
 			setChassisMode(0);
 		}
 		// else{

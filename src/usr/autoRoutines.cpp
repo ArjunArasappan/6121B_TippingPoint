@@ -5,13 +5,12 @@ void rightNeutrals(){
     setAccelStep(7);
 
     //getNeutralMogo
-    // moveBackAsync(30);
-    // delayDist(29.5);
-    moveBackAsync(30);
-    delayDist(29.6);
+    moveBack(43);
+    //moveBackAsync(46);
+    //delayDist(46;
     setMogo(true);
     pros::delay(100);
-    moveForward(23);
+    moveForward(37);
 
     //release neutral mogo & trun
     //setAccelStep(4);
@@ -35,7 +34,7 @@ void rightNeutrals(){
     moveBack(10.5);
     setMogo(true);
     pros::delay(100);
-    setIntakeVel(100);
+    setIntake(true);
     moveForward(11);
     setMogo(false);
 
