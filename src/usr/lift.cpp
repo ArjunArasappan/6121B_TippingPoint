@@ -3,8 +3,10 @@
 pros::Motor lift(LIFT, MOTOR_GEARSET_36, true, MOTOR_ENCODER_DEGREES);
 
 pros::ADIDigitalOut piston(PISTON);
+pros::ADIDigitalOut goal(GOAL);
 
-const int LIFT_MAX = 900;
+
+const int LIFT_MAX = 950;
 const double LIFT_MIN = -3;
 
 const int LIFT_MAX_VOL = 12000;
@@ -26,12 +28,20 @@ int opMode = 0; //0 is velocity control, 1 is move absolute control
 bool isLiftClamped = false;
 bool liftButtPress = false;
 
+bool goalButtPress = false;
+bool isGoal = false;
+
 int lastSet = 0;
 
 
 
 void clamp(bool state){
     isLiftClamped = state;
+}
+
+void setGoal(bool state){
+    isGoal = state;
+
 }
 
 void liftMoveVoltage(int power){
@@ -42,9 +52,11 @@ void setLiftTarget(double target){
     liftTarget = target;
 }
 
+
+
 void liftPrintInfo(){
-	     //pros::lcd::print(0, "liftPos: %d\n", int(liftPos));
-        // pros::lcd::print(1, "liftPos: %d\n", int(liftMode));
+	     pros::lcd::print(0, "liftPos: %d\n", int(liftPos));
+        pros::lcd::print(1, "liftPos: %d\n", int(liftMode));
 
 }
 
@@ -88,11 +100,6 @@ void liftOp(){
         lift.move_absolute(LIFT_PLAT, 100);
     }
 
-    if(master.get_digital(DIGITAL_B)){
-        opMode = 1;
-        liftTarget = 0;
-        lift.move_absolute(liftTarget, 100);
-    }
 
     if(master.get_digital(DIGITAL_A)){
         opMode = 2;
@@ -123,6 +130,23 @@ void liftOp(){
     }
     else{
         piston.set_value(false);
+    }
+
+
+    //goal cover
+    if(master.get_digital(DIGITAL_B) && !goalButtPress){
+        goalButtPress = true;
+        isGoal = !isGoal;
+    }
+    else if(!master.get_digital(DIGITAL_B)){
+        goalButtPress = false;
+    }
+
+    if(isGoal){
+        goal.set_value(true);
+    }
+    else{
+        goal.set_value(false);
     }
 
 }
@@ -162,6 +186,13 @@ void liftTask(void *param){
             }
             else{
                 piston.set_value(false);
+            }
+
+            if(isGoal){
+                goal.set_value(true);
+            }
+            else{
+                goal.set_value(false);
             }
 
 

@@ -33,13 +33,13 @@ int ARC_MAX = 127;
 bool isChassisLocked = false;
 bool lockButtPress = false;
 
-int driveVel = 40;
+bool shouldLock = true;
 
 bool parkButtPress = false;
 bool isParking = false;
 double parkAngleThresh = 20;
-double parkDist = 20;
-double driveDist = 36;
+double parkDist = 19.17;
+double parkVel = 100;
 
 static int chassis_maxSpeed = CHASSIS_MAX;
 static int turn_maxSpeed = TURN_MAX;
@@ -53,20 +53,20 @@ double D = 0;
 int depth = 0;
 
 
-const double CHASSIS_KP = 0.31;//0.3
-const double CHASSIS_KI = 0.24;
-const double CHASSIS_KD = 0.03;
+const double CHASSIS_KP = 0.28;//0.31
+const double CHASSIS_KI = 0.21;//0.24
+const double CHASSIS_KD = 0.03;//0.03
 
-const double TRACKING_CHASSIS_KP = 0.21;//0.148 ,0.1505
-const double TRACKING_CHASSIS_KI = 0.00;//0.012 ,0.001
-const double TRACKING_CHASSIS_KD = 0.08;//.150;//0.160 ,0.01
+const double TRACKING_CHASSIS_KP = 0.17;//0.148 ,0.1505
+const double TRACKING_CHASSIS_KI = 0.011;//0.012 ,0.001
+const double TRACKING_CHASSIS_KD = 0.29;//.150;//0.160 ,0.01
 
 
-const double CHASSIS_ERROR_TRESH[] = {60, 10}; //1st bound starts timer, 2nd bound is for exit condition //{60,13}
+const double CHASSIS_ERROR_TRESH[] = {120, 14}; //1st bound starts timer, 2nd bound is for exit condition //{60,13}
 const double CHASSIS_DERIV_THRESH = 3; //derivative threshold //3
-const int CHASSIS_TIMEOUT[] = {5000, 250}; //max settling time //1300, 120
+const int CHASSIS_TIMEOUT[] = {1000, 250}; //max settling time //1300, 120
 
-const double CHASSIS_LOWER_INTEGRAL_BOUND = CHASSIS_ERROR_TRESH[1];//5
+const double CHASSIS_LOWER_INTEGRAL_BOUND = CHASSIS_ERROR_TRESH[1] - 50;//5
 const double CHASSIS_UPPER_INTEGRAL_BOUND = 130;//60
 const double CHASSIS_INTEGRAL_CAP = 0;
 
@@ -135,14 +135,14 @@ const double TURN_KP = 0.9;
 const double TURN_KI = 0.0;
 const double TURN_KD = 3.0;
 
-const double TRACKING_TURN_KP = 0.45;
-const double TRACKING_TURN_KI = 0.01;
-const double TRACKING_TURN_KD = 1.5;
+const double TRACKING_TURN_KP = 0.42;//0.45
+const double TRACKING_TURN_KI = 0.01;//0.01
+const double TRACKING_TURN_KD = 1.5;//1.5
 
 const double TURN_ERROR_MIN = 0;
 
-const double TURN_ERROR_TRESH[] = {15, 7}; //{15, 7}
-const double TURN_DERIV_THRESH = 1; //2
+const double TURN_ERROR_TRESH[] = {15, 6}; //{15, 7}
+const double TURN_DERIV_THRESH = 2; //2
 const double TURN_TIMEOUT = 1000;
 
 const double TURN_LOWER_INTEGRAL_BOUND = TURN_ERROR_TRESH[4];
@@ -295,6 +295,18 @@ void right(int power){
     right2.move(power);
 }
 
+void leftVel(int vel){
+    left1.move_velocity(vel);
+    leftMid.move_velocity(vel);
+    left2.move_velocity(vel);
+}
+
+void rightVel(int vel){
+    right1.move_velocity(vel);
+    rightMid.move_velocity(vel);
+    right2.move_velocity(vel);
+}
+
 void lockLeft(){
     left1.move_velocity(0);
     leftMid.move_velocity(0);
@@ -438,7 +450,7 @@ void leftSlew(int pwr){
     //
     // if(chassisMode == 2 && chassisAccelStep != 0)
     //     accel = turnAccelStep;
-    if(depth == 0){
+    if(depth == 0 && accel_step < chassisVolts){
         accel = chassisVolts;
     }
     else{
@@ -634,14 +646,17 @@ bool isTurnSettled(){
 
     if(fabs(turnError) < TURN_ERROR_TRESH[0]){
         if( fabs(turnError) < TURN_ERROR_TRESH[1] &&
-            turnDeriv < TURN_DERIV_THRESH &&
-            turnLastDeriv < TURN_DERIV_THRESH)
+            fabs(turnDeriv) < TURN_DERIV_THRESH &&
+            fabs(turnLastDeriv) < TURN_DERIV_THRESH)
             return true;
         else if(turnElapsed > TURN_TIMEOUT)
             return true;
 
         turnElapsed += 20;
         return false;
+    }
+    else{
+        turnElapsed = 0;
     }
     return false;
 }
@@ -721,7 +736,7 @@ void turnWaitUntilSettled(){
 void delayDist(double dist){
     isRightPast = false;
     isLeftPast = false;
-    degDist = inchesToTicks(dist);
+    degDist = tracking_inchesToTicks(dist);
     while(!isRightPast || !isLeftPast){
         if(abs(rightPos) > degDist){
             isRightPast = true;
@@ -777,12 +792,11 @@ void parkPlat(){
     _leftReset();
     _rightReset();
 
-    setChassisVel(driveVel);
+    setChassisVel(parkVel);
     while(fabs(getPitch()) < parkAngleThresh &&
           !master.get_digital(DIGITAL_RIGHT)){
         pros::delay(20);
     }
-
 
     leftTracker.reset_position();
     rightTracker.reset_position();
@@ -961,6 +975,28 @@ void chassisArcade(){
     right(rightPower);
 }
 
+void checkJoys(){
+    int joyThresh = 0;
+    if(fabs(master.get_analog(ANALOG_LEFT_Y)) <= 2 && fabs(master.get_analog(ANALOG_RIGHT_X) <= 2)){
+        shouldLock = true;
+    }
+    else{
+        shouldLock = false;
+    }
+}
+
+void chassisReduced(){
+    double decay = 0.5;
+
+    int power = (master.get_analog(ANALOG_LEFT_Y) * 200) / 127;
+    int turn = (master.get_analog(ANALOG_RIGHT_X) * 200) / 127;
+    int leftPower = power + turn;
+    int rightPower = power - turn;
+
+    leftVel(leftPower * decay);
+    rightVel(rightPower * decay);
+}
+
 int toInt(bool b){
     if(b) return 1;
     return 0;
@@ -983,7 +1019,6 @@ void printStats(){
     pros::lcd::print(5, "depth: %d, slantInt: %d\n", depth, (int)slantDiff);
     pros::lcd::print(6, "heading: %f, pitch: %f\n", getHeading(), getPitch());
     // pros::lcd::print(6, "{head: %d, pitch: %d, yaw: %d\n", (int)imu.get_heading(), (int)imu.get_pitch(), (int)imu.get_yaw());
-    //
     // pros::lcd::print(7, "rot: %f\n", (float)imu.get_rotation());
 
 
@@ -1012,6 +1047,8 @@ void chassisTask(void* parameter){
         // }
         if(chassisMode == 0){
 
+
+
             if(master.get_digital(DIGITAL_LEFT) && !lockButtPress){
                 lockButtPress = true;
                 isChassisLocked = !isChassisLocked;
@@ -1028,12 +1065,21 @@ void chassisTask(void* parameter){
                 parkButtPress = false;
             }
 
+            checkJoys();
             if(isParking){
                 parkPlat();
             }
             else if(isChassisLocked){
-                lockLeft();
-                lockRight();
+                if(shouldLock){
+                    lockLeft();
+                    lockRight();
+                }
+                else{
+                    coastLeft();
+                    coastRight();
+                    chassisReduced();
+                }
+
             }
             else{
                 coastLeft();
@@ -1187,6 +1233,7 @@ void chassisTask(void* parameter){
 
                 turnPos = (-getLeftPos() + getRightPos()) / 2.0;
                 turnError = turnTarget - turnPos;
+                turnLastDeriv = turnDeriv;
                 turnDeriv = turnError - lastTurnError;
                 lastTurnError = turnError;
 
@@ -1314,6 +1361,7 @@ void chassisTask(void* parameter){
 
                     rightPos = getRightPos();
                     rightError = rightTarget - rightPos;
+
                     rightDeriv = rightError - lastRightError;
                     lastRightError = rightError;
 

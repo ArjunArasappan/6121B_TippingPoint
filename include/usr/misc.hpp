@@ -21,6 +21,7 @@
 
 #define PISTON 'A'
 #define MOGO_CLAMP 'B'
+#define GOAL 'C'
 
 extern pros::Controller master;
 

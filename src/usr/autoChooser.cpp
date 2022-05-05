@@ -4,6 +4,7 @@ Credit to VRC Team 315G for most of this code
 
 #include "main.h"
 
+
 int autonNumber;
 int driverState;
 
@@ -11,6 +12,11 @@ static const char *btnm_map[] = {"R_Both", "L_Both", "R_Neuts", "L_Neuts", "\n",
 								 "AWP", "R_Rush", "L_Rush", "R_MidRush", "\n",
 								 "DriverSkills", "ProgSkills", ""};
 static const char *auton_strings[] = {"R.Both", "L.Both", "R.Neuts", "L.Neuts", "AWP", "R.Rsh", "L.Rsh", "R.MidRush", "DrivSkills", "ProgSkills"};
+
+
+
+
+
 
 static lv_res_t btnm_action(lv_obj_t *btnm, const char *txt){
 	for (int i = 0; i < sizeof(auton_strings) / sizeof(auton_strings[0]); i++){
@@ -23,6 +29,8 @@ static lv_res_t btnm_action(lv_obj_t *btnm, const char *txt){
 
 	return LV_RES_OK; /*Return OK because the button matrix is not deleted*/
 }
+
+
 
 
 void autonomousChooserInit(){
@@ -67,11 +75,10 @@ void autonomousChooserExecuteAuto(){
 			rightMidRush();
 			break;
 		case 9:
-			//setDriverIntake(true);
+			setDriverIntake(true);
 			break;
 		case 10:
 			progSkills();
-			break;
 		default:
 			break;
 	}

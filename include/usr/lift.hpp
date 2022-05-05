@@ -3,6 +3,7 @@
 
 void clamp(bool state);
 
+void setGoal(bool state);
 
 void setLiftTarget(double target);
 

@@ -17,6 +17,8 @@ void leftRush();
 
 void rightMidRush();
 
+void rightFakeMid();
+
 void progSkills();
 
 #endif

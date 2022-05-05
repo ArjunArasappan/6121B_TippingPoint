@@ -40,6 +40,7 @@ void initialize() {
 
 	clampPiston(false);
 	setMogo(false);
+	setGoal(false);
 	//pros::lcd::initialize();
 
 }
@@ -51,6 +52,7 @@ void initialize() {
  */
 void disabled() {
 	clampPiston(true);
+	setGoal(false);
 }
 
 /**
@@ -69,6 +71,7 @@ void competition_initialize() {
 		tareLift();
 		pros::delay(20);
 	}
+	setGoal(false);
 }
 
 /**
@@ -92,7 +95,13 @@ void autonomous() {
 		//autonomousChooserExecuteAuto();
 		//soloAWP();
 		//leftBoth();
-		rightNeutrals();
+		///leftRush();
+		//rightRush();
+		//rightMidRush();
+		//rightFakeMid();
+		rightBoth();
+		//rightNeutrals();
+		//leftNeutrals();
 		//leftNeutrals();
 
 
@@ -117,18 +126,28 @@ void opcontrol() {
 	pros::lcd::initialize();
 	while (true) {
 
-		if(master.get_digital(DIGITAL_RIGHT)){
-			setChassisMode(1);
-			setAccelStep(7);
-			moveForward(24);
-			//turn(90);
-			setChassisMode(0);
-		}
-		else if (master.get_digital(DIGITAL_DOWN)) {
-			setAccelStep(7);
-			moveForward(7);
-			setChassisMode(0);
-		}
+		// if(master.get_digital(DIGITAL_RIGHT)){
+		// 	setChassisMode(1);
+		// 	setChassisMax(127);
+		//
+		// 	setAccelStep(7);
+		// 	turn(180);
+		//
+		// 	turn(-180);
+		//
+		// 	// setAccelStep(7);
+		// 	// moveForward(36);
+		// 	// turn(180);
+		// 	// moveForward(36);
+		// 	// turn(180);
+		//
+		// 	setChassisMode(0);
+		// }
+		// else if (master.get_digital(DIGITAL_DOWN)) {
+		// 	setAccelStep(7);
+		// 	moveForward(7);
+		// 	setChassisMode(0);
+		// }
 		// else{
 		// 	setChassisMode(0);
 		// 	setLiftMode(0);
