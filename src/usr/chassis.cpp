@@ -38,7 +38,7 @@ bool shouldLock = true;
 bool parkButtPress = false;
 bool isParking = false;
 double parkAngleThresh = 20;
-double parkDist = 19.17;
+double parkDist = 19.12;
 double parkVel = 100;
 
 static int chassis_maxSpeed = CHASSIS_MAX;
@@ -977,7 +977,7 @@ void chassisArcade(){
 
 void checkJoys(){
     int joyThresh = 0;
-    if(fabs(master.get_analog(ANALOG_LEFT_Y)) <= 2 && fabs(master.get_analog(ANALOG_RIGHT_X) <= 2)){
+    if(fabs(master.get_analog(ANALOG_LEFT_Y)) <= 2 && fabs(master.get_analog(ANALOG_RIGHT_X)) <= 2){
         shouldLock = true;
     }
     else{
@@ -986,7 +986,7 @@ void checkJoys(){
 }
 
 void chassisReduced(){
-    double decay = 0.5;
+    double decay = 0.2;
 
     int power = (master.get_analog(ANALOG_LEFT_Y) * 200) / 127;
     int turn = (master.get_analog(ANALOG_RIGHT_X) * 200) / 127;

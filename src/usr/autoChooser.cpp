@@ -8,11 +8,10 @@ Credit to VRC Team 315G for most of this code
 int autonNumber;
 int driverState;
 
-static const char *btnm_map[] = {"R_Both", "L_Both", "R_Neuts", "L_Neuts", "\n",
-								 "AWP", "R_Rush", "L_Rush", "R_MidRush", "\n",
-								 "DriverSkills", "ProgSkills", ""};
-static const char *auton_strings[] = {"R.Both", "L.Both", "R.Neuts", "L.Neuts", "AWP", "R.Rsh", "L.Rsh", "R.MidRush", "DrivSkills", "ProgSkills"};
-
+static const char *btnm_map[] = {"R_Both", "L_Both", "R_Neuts", "AWP", "\n",
+								 "R_RushBoth", "R_RushNeuts", "L_Rush", "R_MidRush", "\n",
+								 "R_Fake", "ProgSkills", ""};
+static const char *auton_strings[] = {"R_Both", "L_Both", "R_Neuts", "AWP", "R_RushBoth", "R_RushNeuts", "L_Rush", "R_MidRush", "R_Fake", "ProgSkills", ""};
 
 
 
@@ -60,13 +59,13 @@ void autonomousChooserExecuteAuto(){
 			rightNeutrals();
 			break;
 		case 4:
-			leftNeutrals();
-			break;
-		case 5:
 			soloAWP();
 			break;
+		case 5:
+			rightBothRush();
+			break;
 		case 6:
-			rightRush();
+			rightNeutRush();
 			break;
 		case 7:
 			leftRush();
@@ -75,7 +74,7 @@ void autonomousChooserExecuteAuto(){
 			rightMidRush();
 			break;
 		case 9:
-			setDriverIntake(true);
+			rightFakeMid();
 			break;
 		case 10:
 			progSkills();

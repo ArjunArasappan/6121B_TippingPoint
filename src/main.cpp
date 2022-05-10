@@ -52,7 +52,7 @@ void initialize() {
  */
 void disabled() {
 	clampPiston(true);
-	setGoal(false);
+	setMogo(true);
 }
 
 /**
@@ -85,6 +85,7 @@ void competition_initialize() {
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
+
 void autonomous() {
 		_leftReset();
 		_rightReset();
@@ -92,16 +93,14 @@ void autonomous() {
 		reset();
 
 		//progSkills();
-		//autonomousChooserExecuteAuto();
+		autonomousChooserExecuteAuto();
 		//soloAWP();
 		//leftBoth();
 		///leftRush();
-		//rightRush();
-		//rightMidRush();
+		//rightNeutRush();
 		//rightFakeMid();
-		rightBoth();
+		//rightFakeMid();
 		//rightNeutrals();
-		//leftNeutrals();
 		//leftNeutrals();
 
 

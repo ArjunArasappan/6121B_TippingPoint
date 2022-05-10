@@ -5,20 +5,22 @@ void rightNeutrals();
 
 void rightBoth();
 
-void leftNeutrals();
+void rightBothRush();
 
-void leftBoth();
-
-void soloAWP();
-
-void rightRush();
-
-void leftRush();
+void rightNeutRush();
 
 void rightMidRush();
 
 void rightFakeMid();
 
 void progSkills();
+
+void leftNeutrals();
+
+void leftBoth();
+
+void leftRush();
+
+void soloAWP();
 
 #endif
