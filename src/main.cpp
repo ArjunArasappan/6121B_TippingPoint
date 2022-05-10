@@ -51,8 +51,7 @@ void initialize() {
  * the robot is enabled, this task will exit.
  */
 void disabled() {
-	clampPiston(true);
-	setMogo(true);
+
 }
 
 /**
